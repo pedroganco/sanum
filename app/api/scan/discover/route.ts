@@ -166,7 +166,7 @@ async function fetchWebsiteHTML(url: string): Promise<string> {
     });
 
     // Wait a bit for dynamic content
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Get rendered HTML
     const html = await page.content();
