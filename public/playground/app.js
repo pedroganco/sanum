@@ -130,9 +130,13 @@ function resetScan() {
 }
 
 /**
- * Validate URL format
+ * Validate URL format (accepts domain without protocol)
  */
 function isValidUrl(string) {
+    // Remove whitespace
+    string = string.trim();
+
+    // Try as-is first
     try {
         const url = new URL(string);
         return url.protocol === 'http:' || url.protocol === 'https:';
@@ -140,7 +144,8 @@ function isValidUrl(string) {
         // Try adding https:// prefix
         try {
             const url = new URL('https://' + string);
-            return true;
+            // Must have a valid hostname with at least one dot
+            return url.hostname.includes('.');
         } catch (_) {
             return false;
         }

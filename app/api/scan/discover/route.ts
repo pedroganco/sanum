@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import puppeteer from 'puppeteer';
 
 // Rate limiting simples (in-memory)
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
@@ -105,6 +106,10 @@ export async function POST(request: NextRequest) {
 function normalizeUrl(url: string): string {
   let normalized = url.trim();
 
+  // Remove any leading/trailing whitespace
+  normalized = normalized.replace(/^\s+|\s+$/g, '');
+
+  // Add https:// if no protocol specified
   if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
     normalized = 'https://' + normalized;
   }
@@ -120,37 +125,61 @@ function isValidUrl(url: string): boolean {
     const parsed = new URL(url);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
   } catch {
-    return false;
+    // If URL parsing fails, try adding https:// and validating again
+    try {
+      const withHttps = 'https://' + url;
+      const parsed = new URL(withHttps);
+      return parsed.protocol === 'https:' && parsed.hostname.includes('.');
+    } catch {
+      return false;
+    }
   }
 }
 
 /**
- * Fetch website HTML
+ * Fetch website HTML using Puppeteer (renders JavaScript)
  */
 async function fetchWebsiteHTML(url: string): Promise<string> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  let browser = null;
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; SocialMediaScan/1.0; +https://sanum.pt)',
-      },
-      signal: controller.signal,
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ]
     });
 
-    clearTimeout(timeoutId);
+    const page = await browser.newPage();
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+    // Set viewport and user agent
+    await page.setViewport({ width: 1920, height: 1080 });
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    const html = await response.text();
+    // Navigate with timeout
+    await page.goto(url, {
+      waitUntil: 'networkidle2',
+      timeout: 15000
+    });
+
+    // Wait a bit for dynamic content
+    await page.waitForTimeout(2000);
+
+    // Get rendered HTML
+    const html = await page.content();
+
     return html;
 
   } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
+    console.error('Puppeteer error:', error);
+    throw new Error('Failed to fetch website');
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 }
 
@@ -158,13 +187,22 @@ async function fetchWebsiteHTML(url: string): Promise<string> {
  * Extract business name from HTML
  */
 function extractBusinessName(html: string, url: string): string {
+  // Try og:site_name first
+  const ogSiteMatch = html.match(/<meta[^>]*property=["']og:site_name["'][^>]*content=["']([^"']+)["']/i);
+  if (ogSiteMatch && ogSiteMatch[1]) {
+    return ogSiteMatch[1].trim();
+  }
+
   // Try to extract from <title>
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (titleMatch && titleMatch[1]) {
-    // Clean up common suffixes
     let title = titleMatch[1].trim();
-    title = title.replace(/\s*[-–|]\s*(Home|Homepage|Official|Website).*$/i, '');
-    return title;
+    // Clean up common suffixes
+    title = title.replace(/\s*[-–|]\s*(Home|Homepage|Official|Website|Welcome).*$/i, '');
+    title = title.replace(/\s*[-–|]\s*$/, ''); // Remove trailing separator
+    if (title.length > 0 && title.length < 100) {
+      return title;
+    }
   }
 
   // Fallback to domain name
@@ -362,18 +400,42 @@ function extractWebsiteMetadata(html: string): {
   dominantColors: string[];
   detectedTone: string;
 } {
-  // Extract hero/main heading
-  const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  // Extract hero/main heading (first h1 that has actual content)
+  const h1Matches = Array.from(html.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/gi));
   let heroText = '';
-  if (h1Match) {
-    heroText = stripHtmlTags(h1Match[1]).trim();
+  for (const match of h1Matches) {
+    const text = stripHtmlTags(match[1]).trim();
+    // Skip h1s that are too short (navigation, buttons) or too long (full sentences)
+    if (text.length > 10 && text.length < 150 && !text.includes('\n')) {
+      heroText = text;
+      break;
+    }
   }
 
-  // Extract tagline (usually first <p> or subtitle)
-  const pMatches = html.match(/<p[^>]*>([\s\S]*?)<\/p>/gi);
+  // Extract tagline (first meaningful h2 or large p near top)
   let tagline = '';
-  if (pMatches && pMatches.length > 0) {
-    tagline = stripHtmlTags(pMatches[0]).trim().substring(0, 200);
+
+  // Try h2 first
+  const h2Matches = Array.from(html.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/gi));
+  for (const match of h2Matches) {
+    const text = stripHtmlTags(match[1]).trim();
+    if (text.length > 15 && text.length < 200) {
+      tagline = text;
+      break;
+    }
+  }
+
+  // If no h2, try first meaningful p
+  if (!tagline) {
+    const pMatches = Array.from(html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
+    for (const match of pMatches) {
+      const text = stripHtmlTags(match[1]).trim();
+      // Skip very short paragraphs (likely navigation/footer)
+      if (text.length > 30 && text.length < 300) {
+        tagline = text;
+        break;
+      }
+    }
   }
 
   // Extract meta description
@@ -384,10 +446,10 @@ function extractWebsiteMetadata(html: string): {
   const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i);
   const ogDescription = ogDescMatch ? ogDescMatch[1] : '';
 
-  // Extract dominant colors from inline styles and common CSS classes
+  // Extract dominant colors
   const dominantColors = extractDominantColors(html);
 
-  // Detect tone from text (simple heuristic)
+  // Detect tone from text
   const detectedTone = detectTone(heroText + ' ' + tagline + ' ' + metaDescription);
 
   return {
@@ -414,37 +476,75 @@ function stripHtmlTags(str: string): string {
 }
 
 /**
- * Extract dominant colors from HTML (basic implementation)
+ * Extract dominant colors from HTML
  */
 function extractDominantColors(html: string): string[] {
   const colors: string[] = [];
-  const colorRegex = /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/g;
+  const colorMap = new Map<string, number>(); // Track color frequency
 
+  // Extract from inline styles and CSS
+  const styleRegex = /(?:color|background(?:-color)?|border-color|fill):\s*([^;}"'\s]+)/gi;
   let match;
-  const found = new Set<string>();
 
-  while ((match = colorRegex.exec(html)) !== null && colors.length < 5) {
-    const color = '#' + match[1];
-    if (!found.has(color)) {
-      found.add(color);
-      colors.push(color);
+  while ((match = styleRegex.exec(html)) !== null) {
+    const colorValue = match[1].trim();
+    let hex = null;
+
+    // Convert to hex
+    if (colorValue.startsWith('#')) {
+      hex = normalizeHexColor(colorValue);
+    } else if (colorValue.startsWith('rgb')) {
+      hex = rgbToHex(colorValue);
+    }
+
+    if (hex && !isGrayscale(hex) && !isNearWhite(hex)) {
+      colorMap.set(hex, (colorMap.get(hex) || 0) + 1);
     }
   }
 
-  // Also check for rgb/rgba colors
-  const rgbRegex = /rgba?\((\d+),\s*(\d+),\s*(\d+)/g;
-  while ((match = rgbRegex.exec(html)) !== null && colors.length < 5) {
-    const r = parseInt(match[1]);
-    const g = parseInt(match[2]);
-    const b = parseInt(match[3]);
-    const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-    if (!found.has(hex)) {
-      found.add(hex);
-      colors.push(hex);
-    }
-  }
+  // Sort by frequency and take top 5
+  const sortedColors = Array.from(colorMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([color]) => color)
+    .slice(0, 5);
 
-  return colors;
+  return sortedColors;
+}
+
+function normalizeHexColor(color: string): string {
+  let hex = color.replace('#', '');
+  // Expand shorthand
+  if (hex.length === 3) {
+    hex = hex.split('').map(c => c + c).join('');
+  }
+  return '#' + hex.toUpperCase();
+}
+
+function rgbToHex(rgb: string): string | null {
+  const match = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (!match) return null;
+
+  const r = parseInt(match[1]);
+  const g = parseInt(match[2]);
+  const b = parseInt(match[3]);
+
+  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
+function isGrayscale(hex: string): boolean {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  // Check if RGB values are close (grayscale)
+  return Math.abs(r - g) < 10 && Math.abs(g - b) < 10 && Math.abs(r - b) < 10;
+}
+
+function isNearWhite(hex: string): boolean {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  // Check if close to white
+  return r > 240 && g > 240 && b > 240;
 }
 
 /**
