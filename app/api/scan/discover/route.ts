@@ -70,10 +70,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Extract website metadata
+    const websiteData = extractWebsiteMetadata(html);
+
     return NextResponse.json({
       url: normalizedUrl,
       businessName,
       platforms,
+      websiteData,
     });
 
   } catch (error) {
@@ -183,13 +187,14 @@ function findSocialMediaLinks(html: string): Array<{ platform: string; url: stri
   // Social media patterns
   const patterns = [
     { platform: 'Instagram', regex: /instagram\.com\/([a-zA-Z0-9._]+)/gi, type: 'profile' },
-    { platform: 'Facebook', regex: /facebook\.com\/([a-zA-Z0-9._]+)/gi, type: 'profile' },
+    { platform: 'Facebook', regex: /facebook\.com\/([a-zA-Z][a-zA-Z0-9._-]*)/gi, type: 'profile' }, // Must start with letter
     { platform: 'LinkedIn', regex: /linkedin\.com\/(company|in)\/([a-zA-Z0-9-]+)/gi, type: 'profile' },
     { platform: 'Twitter', regex: /twitter\.com\/([a-zA-Z0-9_]+)/gi, type: 'profile' },
     { platform: 'X', regex: /x\.com\/([a-zA-Z0-9_]+)/gi, type: 'profile' },
     { platform: 'TikTok', regex: /tiktok\.com\/@([a-zA-Z0-9._]+)/gi, type: 'profile' },
-    { platform: 'YouTube', regex: /youtube\.com\/(c\/|channel\/|user\/|@)?([a-zA-Z0-9_-]+)/gi, type: 'profile' },
+    { platform: 'YouTube', regex: /youtube\.com\/(?:c\/|channel\/|user\/|@)?([a-zA-Z0-9_-]+)/gi, type: 'profile' },
     { platform: 'Pinterest', regex: /pinterest\.(com|pt)\/([a-zA-Z0-9_]+)/gi, type: 'profile' },
+    { platform: 'Google Business', regex: /(?:google\.com\/maps\/place\/|goo\.gl\/maps\/|g\.page\/|business\.google\.com\/|maps\.google\.com\/\?cid=)([^"'\s<>&]+)/gi, type: 'business' },
   ];
 
   for (const pattern of patterns) {
@@ -213,6 +218,11 @@ function findSocialMediaLinks(html: string): Array<{ platform: string; url: stri
         continue;
       }
 
+      // Platform-specific validation
+      if (!isValidPlatformUrl(pattern.platform, cleanUrl)) {
+        continue;
+      }
+
       platforms.push({
         platform: pattern.platform,
         url: cleanUrl,
@@ -226,6 +236,71 @@ function findSocialMediaLinks(html: string): Array<{ platform: string; url: stri
 }
 
 /**
+ * Validate platform-specific URL format
+ */
+function isValidPlatformUrl(platform: string, url: string): boolean {
+  // Extract the handle/username/path
+  const urlLower = url.toLowerCase();
+
+  switch (platform) {
+    case 'Facebook':
+      // Must not be numeric-only (like /2008)
+      const fbMatch = url.match(/facebook\.com\/([^/?#]+)/i);
+      if (!fbMatch) return false;
+      const fbHandle = fbMatch[1];
+
+      // Reject if purely numeric
+      if (/^\d+$/.test(fbHandle)) return false;
+
+      // Reject common non-page paths
+      if (['pages', 'profile.php', 'groups', 'events', 'photo', 'watch'].includes(fbHandle)) {
+        return false;
+      }
+
+      // Must start with a letter
+      if (!/^[a-zA-Z]/.test(fbHandle)) return false;
+
+      return true;
+
+    case 'Instagram':
+      const igMatch = url.match(/instagram\.com\/([^/?#]+)/i);
+      if (!igMatch) return false;
+      const igHandle = igMatch[1];
+
+      // Reject reserved paths
+      if (['p', 'reel', 'tv', 'explore', 'accounts', 'direct'].includes(igHandle)) {
+        return false;
+      }
+
+      return true;
+
+    case 'YouTube':
+      // Reject watch/embed URLs (already filtered in isNoisyLink, but double-check)
+      if (urlLower.includes('/watch') || urlLower.includes('/embed') || urlLower.includes('/shorts')) {
+        return false;
+      }
+      // Accept channel/user/c/@ URLs or clean channel names
+      return true;
+
+    case 'Google Business':
+      // Accept various Google Business/Maps URL formats
+      if (
+        urlLower.includes('google.com/maps/place') ||
+        urlLower.includes('goo.gl/maps') ||
+        urlLower.includes('g.page/') ||
+        urlLower.includes('business.google.com') ||
+        urlLower.includes('maps.google.com/?cid=')
+      ) {
+        return true;
+      }
+      return false;
+
+    default:
+      return true; // Other platforms pass validation
+  }
+}
+
+/**
  * Filter out noisy/irrelevant social links
  */
 function isNoisyLink(url: string): boolean {
@@ -234,10 +309,160 @@ function isNoisyLink(url: string): boolean {
     /policy/i,
     /terms/i,
     /sharer\.php/i,
+    /sharer/i,
     /share/i,
     /intent\/tweet/i,
     /widgets/i,
+    /plugins/i,
+    /embed/i,
+    /dialog/i,
+    /hashtag/i,
+    /explore/i,
+    /search/i,
+    // Facebook specific noise
+    /facebook\.com\/pages\//i,
+    /facebook\.com\/profile\.php/i,
+    /facebook\.com\/groups/i,
+    /facebook\.com\/events/i,
+    /facebook\.com\/photo/i,
+    /facebook\.com\/watch/i,
+    // Instagram noise
+    /instagram\.com\/p\//i,  // individual posts
+    /instagram\.com\/reel\//i,
+    /instagram\.com\/tv\//i,
+    /instagram\.com\/explore/i,
+    // YouTube noise
+    /youtube\.com\/watch/i,  // individual videos
+    /youtube\.com\/embed/i,
+    /youtube\.com\/shorts/i,
+    // Generic numeric-only paths (like facebook.com/2008)
+    /\/\d+\/?$/,
   ];
 
   return noisyPatterns.some(pattern => pattern.test(url));
+}
+
+/**
+ * Extract website metadata (text, tone, colors, meta tags)
+ */
+function extractWebsiteMetadata(html: string): {
+  heroText: string;
+  tagline: string;
+  metaDescription: string;
+  ogDescription: string;
+  dominantColors: string[];
+  detectedTone: string;
+} {
+  // Extract hero/main heading
+  const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  let heroText = '';
+  if (h1Match) {
+    heroText = stripHtmlTags(h1Match[1]).trim();
+  }
+
+  // Extract tagline (usually first <p> or subtitle)
+  const pMatches = html.match(/<p[^>]*>([\s\S]*?)<\/p>/gi);
+  let tagline = '';
+  if (pMatches && pMatches.length > 0) {
+    tagline = stripHtmlTags(pMatches[0]).trim().substring(0, 200);
+  }
+
+  // Extract meta description
+  const metaDescMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
+  const metaDescription = metaDescMatch ? metaDescMatch[1] : '';
+
+  // Extract og:description
+  const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i);
+  const ogDescription = ogDescMatch ? ogDescMatch[1] : '';
+
+  // Extract dominant colors from inline styles and common CSS classes
+  const dominantColors = extractDominantColors(html);
+
+  // Detect tone from text (simple heuristic)
+  const detectedTone = detectTone(heroText + ' ' + tagline + ' ' + metaDescription);
+
+  return {
+    heroText,
+    tagline,
+    metaDescription,
+    ogDescription,
+    dominantColors,
+    detectedTone,
+  };
+}
+
+/**
+ * Strip HTML tags from string
+ */
+function stripHtmlTags(str: string): string {
+  return str.replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"');
+}
+
+/**
+ * Extract dominant colors from HTML (basic implementation)
+ */
+function extractDominantColors(html: string): string[] {
+  const colors: string[] = [];
+  const colorRegex = /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/g;
+
+  let match;
+  const found = new Set<string>();
+
+  while ((match = colorRegex.exec(html)) !== null && colors.length < 5) {
+    const color = '#' + match[1];
+    if (!found.has(color)) {
+      found.add(color);
+      colors.push(color);
+    }
+  }
+
+  // Also check for rgb/rgba colors
+  const rgbRegex = /rgba?\((\d+),\s*(\d+),\s*(\d+)/g;
+  while ((match = rgbRegex.exec(html)) !== null && colors.length < 5) {
+    const r = parseInt(match[1]);
+    const g = parseInt(match[2]);
+    const b = parseInt(match[3]);
+    const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    if (!found.has(hex)) {
+      found.add(hex);
+      colors.push(hex);
+    }
+  }
+
+  return colors;
+}
+
+/**
+ * Detect tone from text (simple keyword-based heuristic)
+ */
+function detectTone(text: string): string {
+  const lower = text.toLowerCase();
+
+  // Professional/Corporate indicators
+  const professionalKeywords = ['solution', 'enterprise', 'business', 'professional', 'industry', 'expert'];
+  const professionalCount = professionalKeywords.filter(k => lower.includes(k)).length;
+
+  // Casual/Friendly indicators
+  const casualKeywords = ['hey', 'awesome', 'cool', 'fun', 'easy', 'simple', 'love'];
+  const casualCount = casualKeywords.filter(k => lower.includes(k)).length;
+
+  // Playful/Creative indicators
+  const playfulKeywords = ['amazing', 'exciting', 'magic', 'wow', 'yay', '!'];
+  const playfulCount = playfulKeywords.filter(k => lower.includes(k)).length;
+
+  if (professionalCount > casualCount && professionalCount > playfulCount) {
+    return 'Professional';
+  } else if (playfulCount > professionalCount && playfulCount > casualCount) {
+    return 'Playful';
+  } else if (casualCount > 0) {
+    return 'Casual/Friendly';
+  }
+
+  return 'Neutral';
 }
