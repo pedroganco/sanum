@@ -8,6 +8,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
     "@types/node": "^25.2.3",
     "@types/react": "^19.2.14",
     "next": "^16.1.6",

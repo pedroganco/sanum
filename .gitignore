@@ -3,3 +3,6 @@ node_modules/
 data/
 *.db
 .DS_Store
+.env.local
+.env*.local
+docs/sample-germano-de-sousa.pdf
