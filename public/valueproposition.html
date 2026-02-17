@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanum.pt — Value Proposition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: #1a1a2e;
+            background: #fff;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 920px; margin: 0 auto; padding: 0 32px; }
+
+        /* Cover */
+        .cover {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #0f766e 100%);
+            color: white;
+            padding: 80px 0;
+        }
+        .cover .label {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #6ee7b7;
+            margin-bottom: 24px;
+        }
+        .cover h1 {
+            font-size: clamp(36px, 5vw, 56px);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 32px;
+        }
+        .cover h1 span { color: #6ee7b7; }
+        .cover .subtitle {
+            font-size: 20px;
+            color: #a7f3d0;
+            max-width: 620px;
+            margin-bottom: 48px;
+            line-height: 1.6;
+        }
+        .cover-meta {
+            display: flex;
+            gap: 40px;
+            font-size: 14px;
+            color: #6b9080;
+        }
+        .cover-meta strong { color: #d1fae5; }
+
+        /* Section */
+        section {
+            padding: 80px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        section:last-child { border-bottom: none; }
+
+        .section-number {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #059669;
+            margin-bottom: 12px;
+        }
+        h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+        .section-lead {
+            font-size: 18px;
+            color: #64748b;
+            margin-bottom: 40px;
+            max-width: 700px;
+        }
+        h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 40px;
+            margin-bottom: 16px;
+        }
+        p { margin-bottom: 16px; color: #334155; }
+
+        /* Pyramid TAM/SAM/SOM */
+        .tam-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 40px 0;
+        }
+        .tam-ring {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            text-align: center;
+            font-weight: 600;
+        }
+        .tam-tam {
+            width: 340px; height: 340px;
+            background: #d1fae5;
+            color: #064e3b;
+            font-size: 14px;
+            border: 2px solid #6ee7b7;
+        }
+        .tam-sam {
+            width: 240px; height: 240px;
+            background: #6ee7b7;
+            color: #064e3b;
+            font-size: 14px;
+            margin-top: -80px;
+            border: 2px solid #059669;
+            z-index: 1;
+        }
+        .tam-som {
+            width: 140px; height: 140px;
+            background: #059669;
+            color: white;
+            font-size: 13px;
+            margin-top: -60px;
+            border: 2px solid #047857;
+            z-index: 2;
+        }
+        .tam-ring strong {
+            display: block;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 28px;
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: #059669;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .stat-label { font-size: 14px; color: #64748b; }
+        .stat-note { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+        /* Card grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 32px;
+        }
+        .card h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .card .card-tag {
+            font-size: 12px;
+            font-weight: 600;
+            color: #059669;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .card p { font-size: 14px; color: #475569; margin-bottom: 12px; }
+        .card ul { font-size: 14px; color: #475569; padding-left: 18px; }
+        .card ul li { margin-bottom: 6px; }
+
+        /* Highlight box */
+        .highlight-box {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1px solid #a7f3d0;
+            border-radius: 16px;
+            padding: 40px;
+            margin: 32px 0;
+        }
+        .highlight-box h3 { margin-top: 0; color: #064e3b; }
+        .highlight-box p { color: #065f46; }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-yellow { background: #fef3c7; color: #92400e; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-gray { background: #f1f5f9; color: #475569; }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+            margin: 32px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #d1fae5;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 32px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -32px;
+            top: 6px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #059669;
+            border: 3px solid #d1fae5;
+        }
+        .timeline-item.future::before {
+            background: #a7f3d0;
+            border-color: #d1fae5;
+        }
+        .timeline-item h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .timeline-item .timeline-date {
+            font-size: 13px;
+            color: #059669;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .timeline-item p { font-size: 14px; color: #475569; }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 14px;
+        }
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            background: #f1f5f9;
+            font-weight: 600;
+            font-size: 13px;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+        tr:hover td { background: #f8fafc; }
+
+        /* CTA */
+        .cta-section {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #0f766e 100%);
+            color: white;
+            text-align: center;
+        }
+        .cta-section h2 {
+            color: white;
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+        .cta-section p {
+            color: #a7f3d0;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        .cta-btn {
+            display: inline-block;
+            background: #6ee7b7;
+            color: #064e3b;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 16px 40px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(110, 231, 183, 0.3);
+        }
+
+        /* Semáforo demo */
+        .semaforo {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .semaforo-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot-green { background: #22c55e; }
+        .dot-yellow { background: #eab308; }
+        .dot-red { background: #ef4444; }
+
+        /* Feature list */
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .feature-item {
+            display: flex;
+            gap: 16px;
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: #ecfdf5;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .feature-item h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+        .feature-item p { font-size: 13px; color: #64748b; margin: 0; }
+
+        /* Comparison table */
+        .comparison-table td:first-child { font-weight: 600; }
+        .comparison-table .check { color: #059669; font-weight: 700; }
+        .comparison-table .cross { color: #dc2626; }
+        .comparison-table .partial { color: #d97706; }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container { padding: 0 20px; }
+            section { padding: 56px 0; }
+            .cover { padding: 60px 0; }
+            .cover-meta { flex-direction: column; gap: 12px; }
+            h2 { font-size: 26px; }
+            .tam-tam { width: 260px; height: 260px; }
+            .tam-sam { width: 180px; height: 180px; margin-top: -60px; }
+            .tam-som { width: 110px; height: 110px; margin-top: -45px; }
+            .tam-ring strong { font-size: 18px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .card-grid { grid-template-columns: 1fr; }
+            .highlight-box { padding: 28px; }
+            .stat-number { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+    <div class="container">
+        <div class="label">Value Proposition</div>
+        <h1>As análises clínicas que ninguém <span>te explica.</span></h1>
+        <p class="subtitle">O Sanum transforma PDFs de análises clínicas portuguesas em insights compreensíveis — com inteligência artificial, em segundos, sem criar conta.</p>
+        <div class="cover-meta">
+            <div><strong>Produto</strong><br>sanum.pt</div>
+            <div><strong>Fase</strong><br>v1 Live</div>
+            <div><strong>Data</strong><br>Fevereiro 2026</div>
+        </div>
+    </div>
+</div>
+
+<!-- 01 - O PROBLEMA -->
+<section>
+    <div class="container">
+        <div class="section-number">01 — O Problema</div>
+        <h2>Milhões de portugueses recebem análises que não entendem</h2>
+        <p class="section-lead">Todos os anos, milhões de PDFs de análises clínicas são entregues a portugueses que não sabem o que significam os valores — e o sistema não os ajuda a perceber.</p>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">~40M</div>
+                <div class="stat-label">Análises clínicas realizadas por ano em Portugal</div>
+                <div class="stat-note">Estimativa com base nos MCDT prescritos no SNS + privado (ACSS, 2023)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">72h+</div>
+                <div class="stat-label">Tempo médio para receber resultados</div>
+                <div class="stat-note">Depois de esperar, ficam sem explicação</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">3-6 meses</div>
+                <div class="stat-label">Tempo de espera por consulta no SNS</div>
+                <div class="stat-note">Para discutir resultados com o médico (Pordata/ERS)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">~15 min</div>
+                <div class="stat-label">Duração média da consulta</div>
+                <div class="stat-note">Sem tempo para explicar cada marcador em detalhe</div>
+            </div>
+        </div>
+
+        <h3>A jornada actual do utente</h3>
+        <p>1. Vai ao laboratório ou faz colheita → 2. Recebe PDF por email ou no portal → 3. Vê números e intervalos de referência que não entende → 4. Pesquisa no Google (informação genérica, alarmista, não contextualizada) → 5. Espera semanas/meses pela consulta → 6. Médico olha 30 segundos para os resultados → 7. Ciclo repete-se sem histórico nem contexto longitudinal.</p>
+
+        <div class="highlight-box">
+            <h3>O paradoxo da literacia em saúde em Portugal</h3>
+            <p>Segundo o Inquérito Europeu de Literacia em Saúde (HLS-EU), <strong>61% dos portugueses têm literacia em saúde inadequada ou problemática</strong> — a segunda pior taxa da Europa. Os dados existem mas não são acessíveis. O sistema gera informação clínica que os utentes não conseguem interpretar.</p>
+        </div>
+    </div>
+</section>
+
+<!-- 02 - MERCADO (TAM/SAM/SOM) -->
+<section>
+    <div class="container">
+        <div class="section-number">02 — Dimensão de Mercado</div>
+        <h2>TAM / SAM / SOM</h2>
+        <p class="section-lead">O mercado de análises clínicas em Portugal é vasto e sub-servido. Globalmente, o sector de digital health analytics cresce a dois dígitos.</p>
+
+        <div class="tam-visual">
+            <div class="tam-ring tam-tam">
+                <div>
+                    <strong>~6.5M</strong>
+                    TAM<br>
+                    <small>Adultos PT que fazem análises clínicas</small>
+                </div>
+            </div>
+            <div class="tam-ring tam-sam">
+                <div>
+                    <strong>~2.5M</strong>
+                    SAM<br>
+                    <small>Digitalmente activos, análises regulares</small>
+                </div>
+            </div>
+            <div class="tam-ring tam-som">
+                <div>
+                    <strong>~350K</strong>
+                    SOM<br>
+                    <small>Early adopters</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">8.3M</div>
+                <div class="stat-label">Adultos em Portugal (18+)</div>
+                <div class="stat-note">INE, Censos 2021</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">78%</div>
+                <div class="stat-label">Fazem análises pelo menos 1×/ano</div>
+                <div class="stat-note">Inquérito Nacional de Saúde (INE/INSA, 2019)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">85%</div>
+                <div class="stat-label">Penetração de internet em PT</div>
+                <div class="stat-note">Eurostat / ANACOM, 2024</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">$76B</div>
+                <div class="stat-label">Mercado global de Digital Health (2025)</div>
+                <div class="stat-note">Grand View Research — CAGR 15.1% até 2030</div>
+            </div>
+        </div>
+
+        <h3>Racional</h3>
+        <p><strong>TAM (~6.5M):</strong> Dos 8.3M de adultos em Portugal, cerca de 78% realizam análises clínicas pelo menos uma vez por ano. Isto inclui utentes do SNS, ADSE, seguros privados e consultas particulares.</p>
+        <p><strong>SAM (~2.5M):</strong> Adultos digitalmente activos (smartphone + internet regular), que fazem análises com regularidade e já recebem resultados em formato digital (portais de laboratório, email). Exclui população sénior digitalmente excluída.</p>
+        <p><strong>SOM (~350K):</strong> Early adopters tech-savvy, interessados em saúde preventiva e quantified self, que procuram activamente ferramentas para compreender a sua saúde. Segmento urbano, 25-55 anos, Lisboa/Porto.</p>
+
+        <div class="highlight-box">
+            <h3>Mercado global de PHR & Health Analytics</h3>
+            <p>O mercado global de Personal Health Records (PHR) foi avaliado em <strong>~$20B em 2024</strong> com CAGR de 14.7% até 2032 (Fortune Business Insights). O sub-segmento de AI-powered health analytics é o que mais cresce, impulsionado por wearables, DTC lab testing e consumer health apps. Portugal, apesar de ter infraestrutura digital (SNS 24, RSE, portais de lab), não tem nenhuma solução consumer-first de interpretação de resultados.</p>
+        </div>
+    </div>
+</section>
+
+<!-- 03 - GAP DE MERCADO -->
+<section>
+    <div class="container">
+        <div class="section-number">03 — Gap de Mercado</div>
+        <h2>Não existe nada consumer-first para isto em Portugal</h2>
+        <p class="section-lead">Os laboratórios entregam PDFs. O SNS24 não interpreta resultados. Os médicos não têm tempo. O consumidor fica sozinho.</p>
+
+        <div class="card-grid">
+            <div class="card">
+                <h4>🏥 Laboratórios</h4>
+                <p>Entregam PDFs com valores e intervalos de referência. Zero contextualização. Zero explicação. O utente recebe dados crus sem saber o que significam.</p>
+            </div>
+            <div class="card">
+                <h4>📞 SNS 24</h4>
+                <p>Linha de triagem e aconselhamento geral. Não faz interpretação de análises clínicas. Não tem acesso ao PDF do utente.</p>
+            </div>
+            <div class="card">
+                <h4>👨‍⚕️ Médicos de Família</h4>
+                <p>Sobrecarregados com listas de utentes. Consultas de 15 min. Vêem um ponto no tempo, sem contexto longitudinal. Não têm capacidade para explicar cada marcador.</p>
+            </div>
+            <div class="card">
+                <h4>🔍 Google</h4>
+                <p>O utente pesquisa "colesterol alto o que significa" e encontra artigos genéricos, muitas vezes alarmistas, descontextualizados e não adaptados a valores de referência PT.</p>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <h3>O gap em números</h3>
+            <p>Portugal tem <strong>4.3 médicos por 1.000 habitantes</strong> (OECD, 2023) — acima da média — mas o tempo de espera para consultas no SNS continua a crescer. O problema não é falta de médicos, é falta de <strong>ferramentas de empowerment do utente</strong>. Nenhum player em Portugal preenche este espaço.</p>
+        </div>
+    </div>
+</section>
+
+<!-- 04 - CONCORRENTES -->
+<section>
+    <div class="container">
+        <div class="section-number">04 — Landscape Competitivo</div>
+        <h2>Quem joga neste espaço?</h2>
+        <p class="section-lead">Existem players adjacentes, mas nenhum resolve directamente o problema do consumidor português que quer perceber as suas análises.</p>
+
+        <div class="card-grid">
+            <div class="card">
+                <span class="card-tag">🇵🇹 Portugal • €2.7M Pre-Seed</span>
+                <h4>Chrono Health</h4>
+                <p>PHR completo para gestão de doenças crónicas. Modelo B2B2C (parceria com hospitais/seguros). Construído em Bubble.io.</p>
+                <ul>
+                    <li><strong>Foco:</strong> Crónicos, não consumer-first</li>
+                    <li><strong>Modelo:</strong> B2B2C, depende de parcerias institucionais</li>
+                    <li><strong>Tech:</strong> Bubble.io (no-code, limitações de escala)</li>
+                    <li><strong>vs Sanum:</strong> Posicionamento diferente. Chrono gere doenças; Sanum interpreta análises para o consumidor saudável ou curioso</li>
+                </ul>
+            </div>
+            <div class="card">
+                <span class="card-tag">🌍 Internacional</span>
+                <h4>Ornament Health</h4>
+                <p>App que faz parsing de PDFs de análises e mostra tendências. Disponível globalmente.</p>
+                <ul>
+                    <li><strong>Foco:</strong> Parsing genérico de labs internacionais</li>
+                    <li><strong>Limitação:</strong> Não adaptado a labs portugueses</li>
+                    <li><strong>Limitação:</strong> Não conhece marcadores PT nem intervalos de referência locais</li>
+                    <li><strong>vs Sanum:</strong> Sanum é 100% adaptado ao ecossistema PT, com base de ~80 marcadores hardcoded</li>
+                </ul>
+            </div>
+            <div class="card">
+                <span class="card-tag">🇺🇸 USA • Premium</span>
+                <h4>InsideTracker</h4>
+                <p>Plataforma premium de blood testing + dashboard + recomendações personalizadas. Foco em performance e longevidade.</p>
+                <ul>
+                    <li><strong>Preço:</strong> $200-600/análise</li>
+                    <li><strong>Mercado:</strong> Apenas US/UK</li>
+                    <li><strong>Modelo:</strong> Teste próprio + interpretação, fechado</li>
+                    <li><strong>vs Sanum:</strong> InsideTracker é premium/fechado; Sanum usa as análises que já tens, gratuitamente</li>
+                </ul>
+            </div>
+            <div class="card">
+                <span class="card-tag">🇺🇸 USA • At-Home Testing</span>
+                <h4>SiPhox Health</h4>
+                <p>Kit de análise ao sangue em casa + dashboard de resultados. Modelo DTC (direct-to-consumer).</p>
+                <ul>
+                    <li><strong>Mercado:</strong> US only</li>
+                    <li><strong>Modelo:</strong> Vende o kit, não interpreta PDFs externos</li>
+                    <li><strong>vs Sanum:</strong> Sanum não vende kits — interpreta análises que já existem. Zero friction.</li>
+                </ul>
+            </div>
+            <div class="card">
+                <span class="card-tag">📱 Global • Genéricas</span>
+                <h4>Apple Health / Samsung Health</h4>
+                <p>Agregadores de dados de saúde (passos, sono, ritmo cardíaco). Não fazem interpretação de análises clínicas.</p>
+                <ul>
+                    <li><strong>Gap:</strong> Não lêem PDFs de laboratório</li>
+                    <li><strong>Gap:</strong> Não interpretam marcadores bioquímicos</li>
+                    <li><strong>vs Sanum:</strong> Complementares, não concorrentes. Sanum preenche o espaço que estas apps ignoram.</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Matriz de Posicionamento</h3>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Funcionalidade</th>
+                    <th>Sanum</th>
+                    <th>Chrono</th>
+                    <th>Ornament</th>
+                    <th>InsideTracker</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Parsing de PDFs PT</td>
+                    <td class="check">✓ Nativo</td>
+                    <td class="partial">~ Manual</td>
+                    <td class="partial">~ Parcial</td>
+                    <td class="cross">✗</td>
+                </tr>
+                <tr>
+                    <td>Explicação por marcador</td>
+                    <td class="check">✓ AI + Base local</td>
+                    <td class="cross">✗</td>
+                    <td class="partial">~ Genérica</td>
+                    <td class="check">✓</td>
+                </tr>
+                <tr>
+                    <td>Sem criar conta</td>
+                    <td class="check">✓</td>
+                    <td class="cross">✗</td>
+                    <td class="cross">✗</td>
+                    <td class="cross">✗</td>
+                </tr>
+                <tr>
+                    <td>Adaptado a PT</td>
+                    <td class="check">✓ 100%</td>
+                    <td class="check">✓</td>
+                    <td class="cross">✗</td>
+                    <td class="cross">✗</td>
+                </tr>
+                <tr>
+                    <td>Gratuito (análise básica)</td>
+                    <td class="check">✓</td>
+                    <td class="cross">✗</td>
+                    <td class="check">✓</td>
+                    <td class="cross">✗</td>
+                </tr>
+                <tr>
+                    <td>Dashboard semáforo</td>
+                    <td class="check">✓ 🟢🟡🔴</td>
+                    <td class="cross">✗</td>
+                    <td class="partial">~</td>
+                    <td class="check">✓</td>
+                </tr>
+                <tr>
+                    <td>Privacy-first</td>
+                    <td class="check">✓ Zero dados</td>
+                    <td class="partial">~ Contas</td>
+                    <td class="partial">~ Contas</td>
+                    <td class="cross">✗</td>
+                </tr>
+                <tr>
+                    <td>Preço consumer</td>
+                    <td><strong>Grátis / Freemium</strong></td>
+                    <td>B2B2C</td>
+                    <td>Grátis + Ads</td>
+                    <td>$200-600</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- 05 - A SOLUÇÃO -->
+<section>
+    <div class="container">
+        <div class="section-number">05 — A Solução</div>
+        <h2>Sanum — Percebe as tuas análises em segundos</h2>
+        <p class="section-lead">Uma ferramenta web simples, rápida e privada que transforma PDFs de análises clínicas portuguesas em informação compreensível.</p>
+
+        <h3>Como funciona</h3>
+        <p>1. <strong>Upload do PDF</strong> — arrasta o ficheiro de análises (qualquer laboratório PT)<br>
+        2. <strong>Parsing inteligente</strong> — AI extrai todos os marcadores, valores e unidades<br>
+        3. <strong>Dashboard semáforo</strong> — visualização imediata do que está normal, atenção ou fora do intervalo<br>
+        4. <strong>Explicações por marcador</strong> — descrição clara do que cada valor significa (base local, zero tokens)<br>
+        5. <strong>Análise AI global</strong> — visão holística on-demand dos resultados com contexto</p>
+
+        <div class="semaforo">
+            <div class="semaforo-item"><div class="dot dot-green"></div> Hemoglobina: 14.2 g/dL — Normal</div>
+            <div class="semaforo-item"><div class="dot dot-yellow"></div> Colesterol Total: 215 mg/dL — Atenção</div>
+            <div class="semaforo-item"><div class="dot dot-red"></div> Glicose jejum: 128 mg/dL — Elevado</div>
+        </div>
+
+        <h3>Diferenciadores</h3>
+        <div class="feature-list">
+            <div class="feature-item">
+                <div class="feature-icon">🇵🇹</div>
+                <div>
+                    <h4>100% Português</h4>
+                    <p>Adaptado a labs PT, marcadores PT, intervalos de referência PT. Não é uma tradução genérica.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🔒</div>
+                <div>
+                    <h4>Privacy-First</h4>
+                    <p>Sem contas, sem login, sem persistência de dados. O PDF é processado e descartado. Zero data retention.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">⚡</div>
+                <div>
+                    <h4>Instantâneo</h4>
+                    <p>Resultados em segundos, não em meses. Upload → Dashboard em &lt;10 segundos.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🧠</div>
+                <div>
+                    <h4>Base Local de ~80 Marcadores</h4>
+                    <p>Explicações hardcoded para os marcadores mais comuns. Zero tokens gastos para informação básica.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🎯</div>
+                <div>
+                    <h4>Consumer-First</h4>
+                    <p>Feito para o utente, não para o hospital. Linguagem clara, sem jargão médico desnecessário.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">💰</div>
+                <div>
+                    <h4>Grátis para começar</h4>
+                    <p>Análise básica gratuita. Sem fricção, sem cartão de crédito, sem compromisso.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 06 - MODELO DE NEGÓCIO -->
+<section>
+    <div class="container">
+        <div class="section-number">06 — Modelo de Negócio</div>
+        <h2>Freemium com upsell natural</h2>
+        <p class="section-lead">O valor é claro desde o primeiro uso. A monetização é progressiva e alinhada com o valor entregue.</p>
+
+        <div class="card-grid">
+            <div class="card">
+                <span class="card-tag">Grátis</span>
+                <h4>Free Tier</h4>
+                <p>Upload de PDF, parsing, dashboard semáforo, explicações básicas por marcador. Suficiente para a maioria dos utilizadores.</p>
+                <ul>
+                    <li>1-2 análises/mês</li>
+                    <li>Dashboard semáforo completo</li>
+                    <li>Explicações por marcador (base local)</li>
+                    <li>Sem conta necessária</li>
+                </ul>
+            </div>
+            <div class="card" style="border-color: #6ee7b7;">
+                <span class="card-tag">~€2-3/análise</span>
+                <h4>Pay-Per-Analysis</h4>
+                <p>Análise AI global aprofundada com contexto, correlações entre marcadores e recomendações.</p>
+                <ul>
+                    <li>Análise AI global on-demand</li>
+                    <li>Correlações entre marcadores</li>
+                    <li>Contextualização personalizada</li>
+                    <li>Sem subscrição — paga só quando queres</li>
+                </ul>
+            </div>
+            <div class="card">
+                <span class="card-tag">~€4-6/mês</span>
+                <h4>Premium (futuro)</h4>
+                <p>Para utilizadores recorrentes que querem tracking longitudinal e insights contínuos.</p>
+                <ul>
+                    <li>Análises AI ilimitadas</li>
+                    <li>Evolução temporal de marcadores</li>
+                    <li>Alertas e tendências</li>
+                    <li>Exportação de relatórios</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <h3>Unit Economics (projecção)</h3>
+            <p>Custo por análise AI (GPT-4o): <strong>~€0.02-0.05</strong> por parsing + análise global. Margem de >95% no pay-per-analysis. A base local de 80 marcadores com explicações hardcoded significa que a maioria dos utilizadores obtém valor sem gastar um único token de AI — o custo marginal da tier gratuita é ~€0.</p>
+        </div>
+    </div>
+</section>
+
+<!-- 07 - ROADMAP -->
+<section>
+    <div class="container">
+        <div class="section-number">07 — Roadmap</div>
+        <h2>De MVP a plataforma</h2>
+        <p class="section-lead">Abordagem iterativa e lean. Ship fast, learn fast.</p>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-date">v1.0 — Fevereiro 2026 ✅ LIVE</div>
+                <h4>MVP — Interpretação Instantânea</h4>
+                <p>Upload PDF → parsing AI → dashboard semáforo → explicações por marcador → análise AI global on-demand. Base local de ~80 marcadores PT. Privacy-first, sem contas. Já em produção em sanum.pt.</p>
+            </div>
+            <div class="timeline-item future">
+                <div class="timeline-date">v1.1 — Q2 2026</div>
+                <h4>Evolução Temporal</h4>
+                <p>localStorage para guardar análises anteriores no browser (zero server-side). Gráficos de evolução de marcadores ao longo do tempo. Comparação entre análises. Detecção de tendências.</p>
+            </div>
+            <div class="timeline-item future">
+                <div class="timeline-date">v1.2 — Q3 2026</div>
+                <h4>Monetização & Growth</h4>
+                <p>Pay-per-analysis para análise AI aprofundada. Stripe integration. Referral system. SEO content (guias de marcadores). Parcerias com blogs de saúde PT.</p>
+            </div>
+            <div class="timeline-item future">
+                <div class="timeline-date">v2.0 — Q1 2027</div>
+                <h4>Plataforma Completa</h4>
+                <p>Contas opcionais para persistência cloud. Suporte a mais laboratórios e formatos. Expansão para Espanha e Brasil. Subscrição premium. API para integrações.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 08 - EQUIPA -->
+<section>
+    <div class="container">
+        <div class="section-number">08 — Equipa & Execução</div>
+        <h2>Lean, rápido, vibe coded</h2>
+        <p class="section-lead">Construído com a filosofia de que um fundador técnico com AI assistants pode mover-se mais rápido do que equipas inteiras.</p>
+
+        <div class="card-grid">
+            <div class="card">
+                <h4>🏗️ Abordagem</h4>
+                <p>Vibe coding com AI assistants. Da ideia ao produto live em dias, não meses. Stack moderna, deployment automatizado, zero overhead.</p>
+            </div>
+            <div class="card">
+                <h4>⚡ Velocidade</h4>
+                <p>MVP construído e deployado rapidamente. Iteração contínua baseada em feedback real. Sem burocracia, sem reuniões, sem enterprise bloat.</p>
+            </div>
+            <div class="card">
+                <h4>💡 Vantagem</h4>
+                <p>Enquanto o Chrono Health levantou €2.7M e construiu em Bubble.io, o Sanum está live com stack custom, zero funding, e custo operacional perto de zero.</p>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <h3>Chrono Health gastou €2.7M em Bubble.io. Nós estamos live com €0.</h3>
+            <p>A vantagem do vibe coding e AI-assisted development: velocidade de execução incomparável, custos operacionais mínimos, e a capacidade de iterar diariamente. O Sanum não precisa de uma ronda de investimento para provar valor — já está a fazê-lo.</p>
+        </div>
+    </div>
+</section>
+
+<!-- 09 - CTA -->
+<div class="cta-section">
+    <div class="container">
+        <h2>Experimenta agora</h2>
+        <p>Faz upload das tuas análises e percebe os teus resultados em segundos.<br>Sem conta. Sem compromisso. Sem retenção de dados.</p>
+        <a href="https://sanum.pt" class="cta-btn">Ir para sanum.pt →</a>
+    </div>
+</div>
+
+</body>
+</html>
