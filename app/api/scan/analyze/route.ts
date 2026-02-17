@@ -40,8 +40,11 @@ interface PlatformAnalysis {
     lastPost?: string;
     frequency?: string;
   };
-  strengths: string[];
-  weaknesses: string[];
+  checkmarks: {
+    good: string[];      // ✅
+    bad: string[];       // ❌
+    reflect: string[];   // ℹ️
+  };
   quickWin: string;
 }
 
@@ -50,8 +53,13 @@ interface AnalysisResult {
   businessName: string;
   overallScore: number;
   overallInsight: string;
+  detectedPositioning: string;
+  detectedTone: string;
+  visualConsistency: string;
   platforms: PlatformAnalysis[];
   missingPlatforms: string[];
+  alignmentScore?: number;
+  alignmentInsight?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -66,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { url, platforms, businessName } = body;
+    const { url, platforms, businessName, websiteData, userGoal, userAudience } = body;
 
     if (!url || !platforms || !Array.isArray(platforms)) {
       return NextResponse.json(
@@ -83,7 +91,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Analyze each platform with Claude
-    const analysisResult = await analyzeWithClaude(url, businessName, platforms);
+    const analysisResult = await analyzeWithClaude(
+      url,
+      businessName,
+      platforms,
+      websiteData,
+      userGoal,
+      userAudience
+    );
 
     return NextResponse.json(analysisResult);
 
@@ -103,7 +118,10 @@ export async function POST(request: NextRequest) {
 async function analyzeWithClaude(
   websiteUrl: string,
   businessName: string,
-  platforms: Platform[]
+  platforms: Platform[],
+  websiteData?: any,
+  userGoal?: string,
+  userAudience?: string
 ): Promise<AnalysisResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -117,53 +135,165 @@ async function analyzeWithClaude(
   const foundPlatformNames = platforms.map(p => p.platform);
   const missingPlatforms = allPlatforms.filter(p => !foundPlatformNames.includes(p));
 
-  const prompt = `You are a social media audit specialist. Analyze the social media presence for this business:
+  // Build website context
+  let websiteContext = '';
+  if (websiteData) {
+    websiteContext = `
+**Website Analysis:**
+- Hero text: "${websiteData.heroText || 'Not found'}"
+- Tagline: "${websiteData.tagline || 'Not found'}"
+- Meta description: "${websiteData.metaDescription || 'Not found'}"
+- Detected tone: ${websiteData.detectedTone || 'Unknown'}
+- Dominant colors: ${websiteData.dominantColors?.join(', ') || 'Not detected'}
+`;
+  }
+
+  // Build user context (if re-analysis with user inputs)
+  let userContext = '';
+  if (userGoal || userAudience) {
+    userContext = `
+**User-Provided Context (use this to check alignment):**
+${userGoal ? `- Goal: "${userGoal}"` : ''}
+${userAudience ? `- Target audience: "${userAudience}"` : ''}
+`;
+  }
+
+  const FRAMEWORK = `
+# SOCIAL MEDIA ANALYST FRAMEWORK
+
+## Scoring Categories (from socialmediaanalyst.md)
+
+### 1. Messaging & Positioning (20%)
+- Target audience clarity — can you tell WHO they serve in 5 seconds?
+- Pain point articulation — do they address a specific problem?
+- Value proposition clarity — what makes them different?
+- Cross-platform consistency — same core message everywhere?
+- Tone–audience alignment — does the language match who they serve?
+- USP presence — is there a clear differentiator?
+
+### 2. Tone of Voice (10%)
+- Is the tone consistent across platforms?
+- Does it fit the industry? (Professional services = authoritative, Food = warm/playful, etc.)
+- Do replies/comments match the post tone?
+
+### 3. Visual Consistency (15%)
+- Same colors/logo across platforms?
+- Profile pictures consistent?
+- Cover/banner images current and on-brand?
+- Feed/grid looks cohesive?
+
+### 4. Content Strategy (20%)
+- Posting frequency meets minimum benchmarks?
+- Content mix: 40% educational, 30% engaging, 20% promo, 10% BTS
+- Multiple formats used? (Reels, Stories, carousels, etc.)
+- Responds to comments?
+- Uses hashtags effectively?
+- Has clear CTAs?
+
+### 5. Platform Best Practices (15%)
+- Instagram: Bio complete? Story highlights? Reels present?
+- LinkedIn: Company page complete? Employee advocacy?
+- Facebook: Business info complete? Reviews responded to?
+- TikTok: Using trending sounds? Text overlays?
+(etc. for each platform)
+
+### 6. Website–Social Integration (10%)
+- Social links visible on website?
+- Messaging alignment between site and socials?
+- Social proof on website?
+
+### 7. Red Flags (DEDUCTIONS)
+- Dead accounts (30+ days no post): -10 per platform
+- Inconsistent branding: -5 to -10
+- Never replies to comments: -8
+- Broken links: -5 per link
+- Bought followers (high count, <0.1% engagement): -15
+- Negative reviews with no response: -8
+
+## TONE OF VOICE (from TONEOFVOICE.md)
+
+Write like Nina Hudson — smart friend at a coffee shop:
+- Direct, honest, but not harsh
+- Use "you" and "your"
+- NO buzzwords: "leverage", "optimize", "actionable insights"
+- NO fake enthusiasm: "Amazing!", "Fantastic!"
+- Short sentences. Punchy. To the point.
+- Cheeky but helpful
+
+GOOD: "Your bio's empty. That's prime real estate you're wasting."
+BAD: "Your content strategy could benefit from enhanced optimization."
+
+## OUTPUT FORMAT
+
+Use CHECKMARKS instead of long paragraphs:
+- ✅ Things done well (2-3 max)
+- ❌ Things to fix (2-3 max)
+- ℹ️ Things to reflect on (1-2 max)
+- 🚀 ONE quick win (actionable this week)
+`;
+
+  const prompt = `${FRAMEWORK}
+
+You are a social media analyst. Analyze this business's social presence using the framework above.
 
 **Business:** ${businessName}
 **Website:** ${websiteUrl}
+${websiteContext}
+${userContext}
 
 **Social Media Accounts Found:**
 ${platforms.map(p => `- ${p.platform}: ${p.url}`).join('\n')}
 
-Based ONLY on the fact that these accounts exist (we don't have access to their actual content or metrics), provide a realistic audit.
-
-For each platform, assume typical scenarios for a small/medium business:
-- Most businesses post inconsistently or rarely
-- Engagement is usually low unless they're actively managing it
-- Bios are often incomplete or not optimized
-- Visual branding is often inconsistent
-
 **Your task:**
-1. Score each platform (0-100) based on general best practices awareness
-2. Provide 2-3 likely strengths (be realistic, not overly positive)
-3. Provide 2-3 likely weaknesses (common issues businesses face)
-4. Suggest ONE quick win they can implement this week
 
-Then calculate:
-- Overall score (average of all platform scores)
-- Overall insight (1-2 sentences summarizing their social media health)
+1. **Detect positioning:**
+   - Based on website text and social presence, what do you think this business is about?
+   - Who do they serve? What pain do they solve?
+   - Write 1-2 sentences summarizing detected positioning.
 
-**CRITICAL TONE REQUIREMENTS:**
-- Write like a smart friend at a coffee shop, NOT a corporate consultant
-- Be direct and honest, but not harsh
-- Use "you" and "your" — it's about THEM
-- NO buzzwords: "leverage", "optimize", "actionable insights", "comprehensive"
-- NO fake enthusiasm: "Amazing!", "Fantastic!", "Great job!"
-- Keep it real: "You're posting once a month. That's not going to cut it."
-- Short sentences. Punchy. To the point.
+2. **Detect tone of voice:**
+   - Analyze tone from website text and social accounts
+   - Classify as: Professional, Casual/Friendly, Playful, Authoritative, Empathetic, Luxury, etc.
+   - Check consistency across platforms
 
-Examples of GOOD tone:
-- "Your bio's empty. That's prime real estate you're wasting."
-- "You're posting, but it's random. Pick 2-3 themes and stick to them."
-- "Last post was 6 months ago. Instagram doesn't reward ghosts."
+3. **Visual consistency:**
+   - Do colors/branding seem consistent? (Use website colors as reference if available)
+   - Rate as: Consistent, Mostly Consistent, Inconsistent
 
-Examples of BAD tone (NEVER use these):
-- "Your content strategy could benefit from enhanced optimization"
-- "We recommend implementing a comprehensive posting schedule"
-- "Leverage your brand assets to maximize engagement"
+4. **For each platform, provide:**
+   - Score (0-100) using the framework categories
+   - Realistic metrics estimate (followers, posts, engagement, last post, frequency)
+   - Checkmarks in this format:
+     * good: ["Thing 1", "Thing 2"] — max 3 items
+     * bad: ["Issue 1", "Issue 2"] — max 3 items
+     * reflect: ["Question 1"] — max 2 items
+   - quickWin: ONE actionable thing to do this week
+
+5. **Overall assessment:**
+   - Overall score (weighted average using framework percentages)
+   - Overall insight (1-2 sentences, Nina's tone)
+
+${userGoal || userAudience ? `
+6. **Alignment check (user provided goal/audience):**
+   - Does what you see on the site/socials align with their stated goal and audience?
+   - Alignment score (0-100)
+   - Alignment insight (1-2 sentences)
+` : ''}
+
+**Assumptions for small/medium businesses (be realistic):**
+- Most post inconsistently (1-2×/month instead of weekly)
+- Engagement is usually low (<1% on Instagram)
+- Bios often incomplete
+- Visual branding often inconsistent
+- Typical score range: 30-60/100
+
+**Use Nina's tone throughout.** Be direct but kind. No corporate speak.
 
 Respond ONLY with valid JSON in this exact format:
 {
+  "detectedPositioning": "One sentence about what the business is about and who they serve",
+  "detectedTone": "Professional" or "Casual/Friendly" or "Playful" etc,
+  "visualConsistency": "Consistent" or "Mostly Consistent" or "Inconsistent",
   "platforms": [
     {
       "name": "Instagram",
@@ -173,31 +303,25 @@ Respond ONLY with valid JSON in this exact format:
       "metrics": {
         "followers": "~500",
         "posts": "~30",
-        "engagement": "Low",
+        "engagement": "Low (<1%)",
         "lastPost": "2 months ago",
-        "frequency": "Inconsistent"
+        "frequency": "Inconsistent (1-2×/month)"
       },
-      "strengths": [
-        "You exist on Instagram. That's more than some businesses.",
-        "Visual feed looks somewhat cohesive"
-      ],
-      "weaknesses": [
-        "Posting once a month isn't a strategy, it's a hobby",
-        "Bio is empty — you're not telling people what you do",
-        "No stories, no highlights. You're using 10% of the platform."
-      ],
-      "quickWin": "Fill out your bio properly. Who you are, what you do, why people should care. Takes 5 minutes."
+      "checkmarks": {
+        "good": ["You exist on Instagram — that's more than some businesses", "Profile picture is professional"],
+        "bad": ["Posting once a month isn't a strategy", "Bio doesn't say what you do", "No Stories or Highlights"],
+        "reflect": ["Are you using Instagram because it's right for your audience, or just because everyone else is?"]
+      },
+      "quickWin": "Fill out your bio. Who you are, what you do, why people should care. 5 minutes."
     }
   ],
   "overallScore": 52,
-  "overallInsight": "You're on the right platforms, but you're not really using them. Consistency beats perfection — pick one platform and commit to showing up weekly."
+  "overallInsight": "You're on the right platforms, but barely using them. Pick one and commit to showing up weekly."${userGoal || userAudience ? `,
+  "alignmentScore": 65,
+  "alignmentInsight": "Your stated goal is X, but your content says Y. Let's fix that gap."` : ''}
 }
 
-Remember:
-- Be realistic (most small businesses score 30-60 out of 100)
-- Make weaknesses actionable, not just critical
-- Quick wins should be genuinely doable this week
-- Use the tone like Nina would write it (see examples above)
+Keep it real. Use Nina's voice. Be helpful, not harsh.
 `;
 
   const message = await anthropic.messages.create({
@@ -216,12 +340,33 @@ Remember:
 
   const analysis = JSON.parse(jsonMatch[0]);
 
+  // Normalize platform data (Claude sometimes returns strengths/weaknesses instead of checkmarks)
+  const normalizedPlatforms = (analysis.platforms || []).map((p: any) => {
+    // If Claude returned strengths/weaknesses, convert to checkmarks format
+    if (!p.checkmarks && (p.strengths || p.weaknesses)) {
+      p.checkmarks = {
+        good: p.strengths || [],
+        bad: p.weaknesses || [],
+        reflect: p.reflect || []
+      };
+      delete p.strengths;
+      delete p.weaknesses;
+      delete p.reflect;
+    }
+    return p;
+  });
+
   return {
     url: websiteUrl,
     businessName,
     overallScore: analysis.overallScore || 50,
     overallInsight: analysis.overallInsight || "Analysis complete.",
-    platforms: analysis.platforms || [],
+    detectedPositioning: analysis.detectedPositioning || "Unknown business positioning",
+    detectedTone: analysis.detectedTone || "Unknown",
+    visualConsistency: analysis.visualConsistency || "Unknown",
+    platforms: normalizedPlatforms,
     missingPlatforms: missingPlatforms.filter(p => p !== 'X'), // Filter out X if Twitter exists
+    alignmentScore: analysis.alignmentScore,
+    alignmentInsight: analysis.alignmentInsight,
   };
 }
