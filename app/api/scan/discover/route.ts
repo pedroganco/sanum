@@ -186,8 +186,8 @@ function findSocialMediaLinks(html: string): Array<{ platform: string; url: stri
 
   // Social media patterns
   const patterns = [
-    { platform: 'Instagram', regex: /instagram\.com\/([a-zA-Z0-9._]+)/gi, type: 'profile' },
-    { platform: 'Facebook', regex: /facebook\.com\/([a-zA-Z][a-zA-Z0-9._-]*)/gi, type: 'profile' }, // Must start with letter
+    { platform: 'Instagram', regex: /(?:www\.)?instagram\.com\/([a-zA-Z0-9._]+)/gi, type: 'profile' },
+    { platform: 'Facebook', regex: /(?:www\.)?facebook\.com\/([a-zA-Z][a-zA-Z0-9._-]*)/gi, type: 'profile' }, // Must start with letter
     { platform: 'LinkedIn', regex: /linkedin\.com\/(company|in)\/([a-zA-Z0-9-]+)/gi, type: 'profile' },
     { platform: 'Twitter', regex: /twitter\.com\/([a-zA-Z0-9_]+)/gi, type: 'profile' },
     { platform: 'X', regex: /x\.com\/([a-zA-Z0-9_]+)/gi, type: 'profile' },
@@ -252,8 +252,17 @@ function isValidPlatformUrl(platform: string, url: string): boolean {
       // Reject if purely numeric
       if (/^\d+$/.test(fbHandle)) return false;
 
-      // Reject common non-page paths
-      if (['pages', 'profile.php', 'groups', 'events', 'photo', 'watch'].includes(fbHandle)) {
+      // Reject very short handles (1-3 chars) - usually reserved paths or tracking
+      // Examples: /tr (tracking), /me, /a, /p, etc.
+      if (fbHandle.length <= 3) return false;
+
+      // Reject common reserved paths
+      const reservedPaths = [
+        'pages', 'profile.php', 'groups', 'events', 'photo', 'watch',
+        'help', 'about', 'privacy', 'terms', 'login', 'signup',
+        'marketplace', 'gaming', 'settings', 'notifications'
+      ];
+      if (reservedPaths.includes(fbHandle.toLowerCase())) {
         return false;
       }
 
