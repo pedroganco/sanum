@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Scan — Know where you stand</title>
+    <link rel="stylesheet" href="/playground/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <header class="hero">
+            <h1>Your social media — scanned, scored, sorted.</h1>
+            <p class="subtitle">Paste your website. We'll find your socials, tell you what's working (and what's not), and show you exactly where to focus next. Takes 30 seconds. Costs nothing.</p>
+
+            <form id="scanForm" class="scan-form">
+                <div class="input-group">
+                    <input
+                        type="url"
+                        id="urlInput"
+                        placeholder="https://yourbusiness.com"
+                        required
+                        autocomplete="url"
+                    >
+                    <button type="submit" id="scanBtn" class="btn-primary">
+                        Scan My Business
+                    </button>
+                </div>
+                <p class="input-hint">No signup. No credit card. Just answers.</p>
+            </form>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state" style="display: none;">
+                <div class="loader"></div>
+                <p class="loading-text" id="loadingText">Stalking your socials... in a totally professional way 🔍</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="error-state" style="display: none;">
+                <p id="errorMessage"></p>
+                <button onclick="resetScan()" class="btn-secondary">Try Again</button>
+            </div>
+        </header>
+
+        <!-- Social Proof / Trust Elements (optional) -->
+        <section class="trust-section">
+            <p class="trust-line">Used by agencies, freelancers, and business owners who just want to know where they stand.</p>
+        </section>
+
+        <!-- How It Works -->
+        <section class="how-it-works">
+            <h2>Here's what happens</h2>
+            <div class="steps">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <h3>We scan your website</h3>
+                    <p>Find all your social media accounts automatically</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <h3>AI analyses each platform</h3>
+                    <p>See what's working, what's not, and why it matters</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <h3>You get a full report</h3>
+                    <p>Scores, insights, and quick wins you can action today</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- What You Get -->
+        <section class="what-you-get">
+            <h2>What's in the free scan?</h2>
+            <ul class="feature-list">
+                <li>✅ Which social accounts we found (and which are missing)</li>
+                <li>✅ Overall score (0-100) for your social presence</li>
+                <li>✅ Platform-by-platform breakdown with traffic light ratings</li>
+                <li>✅ What you're doing right vs where you're dropping the ball</li>
+                <li>✅ Quick wins — things you can fix this week</li>
+            </ul>
+        </section>
+
+        <!-- Footer CTA -->
+        <footer class="footer">
+            <p class="footer-note">Built with AI. Reviewed by humans who actually know social media.</p>
+        </footer>
+    </div>
+
+    <script src="/playground/app.js"></script>
+</body>
+</html>

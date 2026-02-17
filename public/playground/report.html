@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Report — Social Media Scan</title>
+    <link rel="stylesheet" href="/playground/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="report-page">
+    <div class="container">
+        <!-- Header -->
+        <header class="report-header">
+            <div class="back-link">
+                <a href="/playground/" class="btn-text">← Scan another business</a>
+            </div>
+            <div class="report-title">
+                <h1 id="businessName">Your Social Media Report</h1>
+                <p class="report-subtitle" id="businessUrl"></p>
+            </div>
+        </header>
+
+        <!-- Overall Score -->
+        <section class="overall-score">
+            <div class="score-card">
+                <div class="score-number" id="overallScore">--</div>
+                <p class="score-label">Overall Social Score</p>
+                <p class="score-insight" id="overallInsight">Loading...</p>
+            </div>
+        </section>
+
+        <!-- Platforms Found -->
+        <section class="platforms-section">
+            <h2>What we found</h2>
+            <div id="platformsList" class="platforms-grid">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- Platform Details -->
+        <section class="platform-details">
+            <h2>Platform breakdown</h2>
+            <div id="platformDetailsContainer">
+                <!-- Populated by JS with individual platform cards -->
+            </div>
+        </section>
+
+        <!-- Missing Platforms -->
+        <section class="missing-platforms" id="missingPlatformsSection" style="display: none;">
+            <h2>What's missing</h2>
+            <p class="section-intro">These platforms could help your business, but we couldn't find accounts for them:</p>
+            <div id="missingPlatformsList" class="missing-list">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- Upgrade CTAs -->
+        <section class="upgrade-section">
+            <div class="cta-card">
+                <h3>Want the full picture?</h3>
+                <p>The free scan gives you the highlights. The full report goes deep — competitor benchmarks, content strategy gaps, platform-by-platform action plan. Everything you need to actually fix this.</p>
+                <a href="mailto:hello@socialmediascan.io?subject=Full Report Request" class="btn-primary">Get Full Report — €29</a>
+            </div>
+
+            <div class="cta-card cta-secondary">
+                <h3>Rather have someone just... do it for you?</h3>
+                <p>Fair. Our social media specialist can take this off your plate entirely. Real human, real strategy, real results. No robots pretending to be your brand.</p>
+                <a href="#" class="btn-secondary">Work With Nina →</a>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="footer-note">Report generated with AI. Insights based on publicly available data.</p>
+        </footer>
+    </div>
+
+    <script src="/playground/app.js"></script>
+    <script>
+        // Load report data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadReport();
+        });
+
+        function loadReport() {
+            // Get report data from URL params or localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const reportId = urlParams.get('id');
+
+            // For MVP, we'll use localStorage
+            const reportData = localStorage.getItem('socialScanReport');
+
+            if (!reportData) {
+                // No data, redirect to home
+                window.location.href = '/playground/';
+                return;
+            }
+
+            try {
+                const data = JSON.parse(reportData);
+                renderReport(data);
+            } catch (error) {
+                console.error('Error loading report:', error);
+                window.location.href = '/playground/';
+            }
+        }
+
+        function renderReport(data) {
+            // Set business info
+            document.getElementById('businessName').textContent = `Report for ${data.businessName || data.url}`;
+            document.getElementById('businessUrl').textContent = data.url;
+
+            // Set overall score
+            document.getElementById('overallScore').textContent = data.overallScore || '--';
+            document.getElementById('overallInsight').textContent = data.overallInsight || '';
+
+            // Add score color class
+            const scoreElement = document.getElementById('overallScore');
+            const score = parseInt(data.overallScore);
+            if (score >= 70) scoreElement.classList.add('score-good');
+            else if (score >= 40) scoreElement.classList.add('score-medium');
+            else scoreElement.classList.add('score-poor');
+
+            // Render platforms found
+            const platformsList = document.getElementById('platformsList');
+            platformsList.innerHTML = '';
+
+            if (data.platforms && data.platforms.length > 0) {
+                data.platforms.forEach(platform => {
+                    const platformCard = document.createElement('div');
+                    platformCard.className = 'platform-chip';
+                    platformCard.innerHTML = `
+                        <span class="platform-icon">${getPlatformEmoji(platform.name)}</span>
+                        <span class="platform-name">${platform.name}</span>
+                        <span class="platform-status ${getStatusClass(platform.score)}">${platform.score}</span>
+                    `;
+                    platformsList.appendChild(platformCard);
+                });
+            } else {
+                platformsList.innerHTML = '<p class="no-platforms">No social accounts found. That's... a problem.</p>';
+            }
+
+            // Render platform details
+            const detailsContainer = document.getElementById('platformDetailsContainer');
+            detailsContainer.innerHTML = '';
+
+            if (data.platforms && data.platforms.length > 0) {
+                data.platforms.forEach(platform => {
+                    const detailCard = createPlatformDetailCard(platform);
+                    detailsContainer.appendChild(detailCard);
+                });
+            }
+
+            // Render missing platforms
+            if (data.missingPlatforms && data.missingPlatforms.length > 0) {
+                document.getElementById('missingPlatformsSection').style.display = 'block';
+                const missingList = document.getElementById('missingPlatformsList');
+                missingList.innerHTML = data.missingPlatforms.map(p =>
+                    `<span class="missing-platform">${getPlatformEmoji(p)} ${p}</span>`
+                ).join('');
+            }
+        }
+
+        function createPlatformDetailCard(platform) {
+            const card = document.createElement('div');
+            card.className = 'platform-detail-card';
+
+            const statusClass = getStatusClass(platform.score);
+            const statusEmoji = platform.score >= 70 ? '🟢' : platform.score >= 40 ? '🟡' : '🔴';
+
+            card.innerHTML = `
+                <div class="platform-detail-header">
+                    <div class="platform-detail-title">
+                        <span class="platform-icon-large">${getPlatformEmoji(platform.name)}</span>
+                        <h3>${platform.name}</h3>
+                    </div>
+                    <div class="platform-score ${statusClass}">
+                        <span class="status-emoji">${statusEmoji}</span>
+                        <span class="score-value">${platform.score}/100</span>
+                    </div>
+                </div>
+
+                ${platform.handle ? `<p class="platform-handle">@${platform.handle}</p>` : ''}
+
+                ${platform.metrics ? `
+                    <div class="platform-metrics">
+                        ${Object.entries(platform.metrics).map(([key, value]) =>
+                            `<div class="metric">
+                                <span class="metric-label">${formatMetricLabel(key)}</span>
+                                <span class="metric-value">${value}</span>
+                            </div>`
+                        ).join('')}
+                    </div>
+                ` : ''}
+
+                <div class="platform-analysis">
+                    ${platform.strengths && platform.strengths.length > 0 ? `
+                        <div class="analysis-section">
+                            <h4>What's working ✅</h4>
+                            <ul>
+                                ${platform.strengths.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+
+                    ${platform.weaknesses && platform.weaknesses.length > 0 ? `
+                        <div class="analysis-section">
+                            <h4>What's not ❌</h4>
+                            <ul>
+                                ${platform.weaknesses.map(w => `<li>${w}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+
+                    ${platform.quickWin ? `
+                        <div class="quick-win">
+                            <h4>Quick win 🚀</h4>
+                            <p>${platform.quickWin}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            return card;
+        }
+
+        function getPlatformEmoji(platformName) {
+            const emojis = {
+                'Instagram': '📸',
+                'Facebook': '👥',
+                'LinkedIn': '💼',
+                'Twitter': '🐦',
+                'X': '🐦',
+                'TikTok': '🎵',
+                'YouTube': '📺',
+                'Pinterest': '📌',
+                'Google Business': '🗺️'
+            };
+            return emojis[platformName] || '🌐';
+        }
+
+        function getStatusClass(score) {
+            if (score >= 70) return 'status-good';
+            if (score >= 40) return 'status-medium';
+            return 'status-poor';
+        }
+
+        function formatMetricLabel(key) {
+            const labels = {
+                'followers': 'Followers',
+                'posts': 'Posts',
+                'engagement': 'Engagement',
+                'lastPost': 'Last Post',
+                'frequency': 'Posting Frequency'
+            };
+            return labels[key] || key;
+        }
+    </script>
+</body>
+</html>
