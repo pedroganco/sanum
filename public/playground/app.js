@@ -5,12 +5,14 @@
 
 // Loading messages rotation
 const loadingMessages = [
-    "Stalking your socials... in a totally professional way 🔍",
-    "Finding your Instagram... hope it's not private 📸",
-    "Checking if your LinkedIn exists... fingers crossed 💼",
-    "Scanning for TikToks... (please don't have cringe ones) 🎵",
-    "Rating your Facebook page... this might take a sec 👥",
-    "Looking for YouTube... do you even video? 📺"
+    "Crawling your website like a very polite spider 🕷️",
+    "Finding your Instagram... let's see what you've been posting 📸",
+    "Checking Facebook... remember Facebook? Yeah, same. 👥",
+    "Looking for TikTok... Gen Z marketing go brrrr 🎵",
+    "Scanning LinkedIn... corporate serious mode activated 💼",
+    "Hunting for YouTube... do you even vlog? 📺",
+    "Reading your bio... this better not say 'passionate entrepreneur' 😬",
+    "Almost done... AI is thinking very hard rn 🤖"
 ];
 
 let loadingMessageInterval;
@@ -48,52 +50,17 @@ async function handleScanSubmit(e) {
     showLoading();
 
     try {
-        // Step 1: Discover social media accounts
-        const discoverResponse = await fetch('/api/scan/discover', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ url })
-        });
-
-        if (!discoverResponse.ok) {
-            const errorData = await discoverResponse.json();
-            throw new Error(errorData.error || 'Failed to discover social accounts');
+        // Clear old data
+        localStorage.removeItem('socialScanReport');
+        
+        // Store URL for the report page to pick up
+        let normalizedUrl = url;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            normalizedUrl = 'https://' + url;
         }
+        localStorage.setItem('pendingScanUrl', normalizedUrl);
 
-        const discoverData = await discoverResponse.json();
-
-        // Check if any platforms were found
-        if (!discoverData.platforms || discoverData.platforms.length === 0) {
-            showError("Hmm, we couldn't find any social accounts linked to that site. Either they're hiding really well, or they don't exist yet. Either way — that's useful information, right?");
-            return;
-        }
-
-        // Step 2: Analyze platforms
-        const analyzeResponse = await fetch('/api/scan/analyze', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                url: url,
-                platforms: discoverData.platforms,
-                businessName: discoverData.businessName
-            })
-        });
-
-        if (!analyzeResponse.ok) {
-            const errorData = await analyzeResponse.json();
-            throw new Error(errorData.error || 'Failed to analyze social accounts');
-        }
-
-        const analyzeData = await analyzeResponse.json();
-
-        // Store report data in localStorage
-        localStorage.setItem('socialScanReport', JSON.stringify(analyzeData));
-
-        // Redirect to report page
+        // Redirect to report page — it handles the scan with nice progress UI
         window.location.href = '/playground/report.html';
 
     } catch (error) {

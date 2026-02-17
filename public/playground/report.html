@@ -7,14 +7,264 @@
     <link rel="stylesheet" href="/playground/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Report-specific loading */
+        .report-loading {
+            text-align: center;
+            padding: 4rem 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .report-loading .gif-container {
+            margin-bottom: 2rem;
+        }
+        .report-loading .gif-container img {
+            width: 200px;
+            border-radius: 16px;
+        }
+        .progress-steps {
+            text-align: left;
+            max-width: 400px;
+            margin: 2rem auto;
+        }
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            font-size: 1rem;
+            color: var(--text-muted);
+            transition: color 0.3s;
+        }
+        .progress-step.active {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+        .progress-step.done {
+            color: var(--status-good);
+        }
+        .progress-step .step-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .progress-step.active .step-icon {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .loading-quip {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-top: 1.5rem;
+        }
+        .report-error {
+            text-align: center;
+            padding: 3rem 1rem;
+            max-width: 500px;
+            margin: 2rem auto;
+            background: #fef2f2;
+            border-radius: 20px;
+            border: 2px solid #fca5a5;
+        }
+        .report-error h2 { color: var(--status-poor); margin-bottom: 1rem; }
+        .report-error p { margin-bottom: 1.5rem; }
+        .report-content { display: none; }
+
+        /* What we detected section */
+        .detected-section {
+            background: var(--bg-secondary);
+            padding: var(--space-lg);
+            border-radius: 20px;
+            margin: var(--space-lg) 0;
+        }
+        .detected-item {
+            margin-bottom: var(--space-md);
+        }
+        .detected-item:last-child { margin-bottom: 0; }
+        .detected-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+        .detected-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Self-assessment */
+        .self-assessment {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            padding: var(--space-lg);
+            margin: var(--space-lg) 0;
+            text-align: center;
+        }
+        .self-assessment h3 {
+            margin-bottom: var(--space-md);
+        }
+        .self-assessment-buttons {
+            display: flex;
+            gap: var(--space-sm);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .self-btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .self-btn:hover {
+            border-color: var(--accent-primary);
+            background: var(--accent-light);
+        }
+        .self-btn.selected {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* User inputs */
+        .user-inputs {
+            background: var(--bg-secondary);
+            padding: var(--space-lg);
+            border-radius: 20px;
+            margin: var(--space-lg) 0;
+        }
+        .input-field {
+            margin-bottom: var(--space-md);
+        }
+        .input-field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+            color: var(--text-primary);
+        }
+        .input-field input,
+        .input-field textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            font-family: var(--font-body);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: white;
+            transition: border-color 0.2s;
+        }
+        .input-field input:focus,
+        .input-field textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        .input-field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Checklist format */
+        .checklist {
+            margin-top: var(--space-md);
+        }
+        .checklist-section {
+            margin-bottom: var(--space-md);
+        }
+        .checklist-section h4 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: var(--space-sm);
+            font-size: 0.9rem;
+        }
+        .checklist-items {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .checklist-items li {
+            padding: 0.5rem 0 0.5rem 2rem;
+            position: relative;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .checklist-items li::before {
+            position: absolute;
+            left: 0;
+            font-size: 1.1rem;
+        }
+        .checklist-good li::before { content: '✅'; }
+        .checklist-bad li::before { content: '❌'; }
+        .checklist-reflect li::before { content: 'ℹ️'; }
+
+        /* Email report section */
+        .email-report {
+            background: white;
+            border: 2px solid var(--accent-primary);
+            border-radius: 20px;
+            padding: var(--space-lg);
+            margin: var(--space-xl) 0;
+            text-align: center;
+        }
+        .email-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            max-width: 400px;
+            margin: var(--space-md) auto 0;
+        }
+        @media (min-width: 640px) {
+            .email-form { flex-direction: row; }
+        }
+        .email-form input[type="email"] {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            font-family: var(--font-body);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+        }
+        .email-form input[type="email"]:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        /* Alignment section */
+        .alignment-section {
+            background: var(--lilac-light);
+            border-left: 4px solid var(--lilac);
+            padding: var(--space-md);
+            border-radius: 12px;
+            margin: var(--space-lg) 0;
+        }
+        .alignment-score {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--lilac);
+            margin-bottom: 0.5rem;
+        }
+    </style>
 </head>
 <body class="report-page">
     <div class="container">
         <!-- Header -->
         <header class="report-header">
             <div class="back-link">
-                <a href="/playground/" class="btn-text">← Scan another business</a>
+                <a href="/playground/index.html" class="btn-text">← Scan another business</a>
             </div>
             <div class="report-title">
                 <h1 id="businessName">Your Social Media Report</h1>
@@ -22,153 +272,397 @@
             </div>
         </header>
 
-        <!-- Overall Score -->
-        <section class="overall-score">
-            <div class="score-card">
-                <div class="score-number" id="overallScore">--</div>
-                <p class="score-label">Overall Social Score</p>
-                <p class="score-insight" id="overallInsight">Loading...</p>
+        <!-- Loading State -->
+        <div id="reportLoading" class="report-loading">
+            <div class="gif-container">
+                <img src="https://media.giphy.com/media/tXL4FHPSnVJ0A/giphy.gif" alt="Waiting...">
             </div>
-        </section>
+            <h2>Hang tight — we're on it 🔍</h2>
+            <div class="progress-steps">
+                <div class="progress-step active" id="step1">
+                    <span class="step-icon">⏳</span>
+                    <span>Finding your social accounts...</span>
+                </div>
+                <div class="progress-step" id="step2">
+                    <span class="step-icon">⏳</span>
+                    <span>Checking each platform...</span>
+                </div>
+                <div class="progress-step" id="step3">
+                    <span class="step-icon">⏳</span>
+                    <span>AI is judging your content (nicely)...</span>
+                </div>
+                <div class="progress-step" id="step4">
+                    <span class="step-icon">⏳</span>
+                    <span>Building your report...</span>
+                </div>
+            </div>
+            <p class="loading-quip" id="loadingQuip">This usually takes 15-30 seconds. Less time than your last Instagram scroll. 📱</p>
+        </div>
 
-        <!-- Platforms Found -->
-        <section class="platforms-section">
-            <h2>What we found</h2>
-            <div id="platformsList" class="platforms-grid">
-                <!-- Populated by JS -->
-            </div>
-        </section>
+        <!-- Error State -->
+        <div id="reportError" class="report-error" style="display: none;">
+            <h2>😬 Well, that didn't work</h2>
+            <p id="reportErrorMsg">Something went wrong while generating your report. It happens to the best of us.</p>
+            <a href="/playground/index.html" class="btn-primary">Try Again ✨</a>
+        </div>
 
-        <!-- Platform Details -->
-        <section class="platform-details">
-            <h2>Platform breakdown</h2>
-            <div id="platformDetailsContainer">
-                <!-- Populated by JS with individual platform cards -->
-            </div>
-        </section>
+        <!-- Report Content (hidden until loaded) -->
+        <div id="reportContent" class="report-content">
+            <!-- Overall Score -->
+            <section class="overall-score">
+                <div class="score-card">
+                    <div class="score-number" id="overallScore">--</div>
+                    <p class="score-label">Overall Social Score</p>
+                    <p class="score-insight" id="overallInsight"></p>
+                </div>
+            </section>
 
-        <!-- Missing Platforms -->
-        <section class="missing-platforms" id="missingPlatformsSection" style="display: none;">
-            <h2>What's missing</h2>
-            <p class="section-intro">These platforms could help your business, but we couldn't find accounts for them:</p>
-            <div id="missingPlatformsList" class="missing-list">
-                <!-- Populated by JS -->
-            </div>
-        </section>
+            <!-- What We Detected -->
+            <section class="detected-section">
+                <h2>What we detected 🔎</h2>
+                <div class="detected-item">
+                    <p class="detected-label">We think your business is about:</p>
+                    <p class="detected-value" id="detectedPositioning">—</p>
+                </div>
+                <div class="detected-item">
+                    <p class="detected-label">Your tone of voice feels:</p>
+                    <p class="detected-value" id="detectedTone">—</p>
+                </div>
+                <div class="detected-item">
+                    <p class="detected-label">Your visual identity is:</p>
+                    <p class="detected-value" id="visualConsistency">—</p>
+                </div>
+            </section>
 
-        <!-- Upgrade CTAs -->
-        <section class="upgrade-section">
-            <div class="cta-card">
-                <h3>Want the full picture?</h3>
-                <p>The free scan gives you the highlights. The full report goes deep — competitor benchmarks, content strategy gaps, platform-by-platform action plan. Everything you need to actually fix this.</p>
-                <a href="mailto:hello@socialmediascan.io?subject=Full Report Request" class="btn-primary">Get Full Report — €29</a>
-            </div>
+            <!-- Self-Assessment -->
+            <section class="self-assessment" id="selfAssessmentSection">
+                <h3>Is this what you wanted to communicate? 🤔</h3>
+                <p style="margin-bottom: var(--space-md); color: var(--text-secondary);">Knowing if your message lands helps us give you better insights.</p>
+                <div class="self-assessment-buttons">
+                    <button class="self-btn" onclick="handleSelfAssessment('yes')">Yes ✅</button>
+                    <button class="self-btn" onclick="handleSelfAssessment('partly')">Partly 🤷</button>
+                    <button class="self-btn" onclick="handleSelfAssessment('no')">No ❌</button>
+                </div>
+            </section>
 
-            <div class="cta-card cta-secondary">
-                <h3>Rather have someone just... do it for you?</h3>
-                <p>Fair. Our social media specialist can take this off your plate entirely. Real human, real strategy, real results. No robots pretending to be your brand.</p>
-                <a href="https://calendly.com/ninahudson-90/30min?utm_source=onlineapp" target="_blank" class="btn-secondary">Work With Nina →</a>
-            </div>
-        </section>
+            <!-- User Inputs (show after self-assessment) -->
+            <section class="user-inputs" id="userInputsSection" style="display: none;">
+                <h2>Help us understand your goals 🎯</h2>
+                <p style="margin-bottom: var(--space-md); color: var(--text-secondary);">We'll re-analyse everything with your context in mind.</p>
+                <div class="input-field">
+                    <label for="goalInput">What's the goal of your site?</label>
+                    <input type="text" id="goalInput" placeholder="e.g., Get more bookings, build brand awareness, sell products...">
+                </div>
+                <div class="input-field">
+                    <label for="audienceInput">Who is your target audience?</label>
+                    <input type="text" id="audienceInput" placeholder="e.g., Millennials in Lisbon, small business owners, fitness enthusiasts...">
+                </div>
+                <button class="btn-primary" onclick="handleReAnalyze()" style="width: 100%; margin-top: var(--space-sm);">
+                    Re-analyse with my context 🔄
+                </button>
+            </section>
+
+            <!-- Alignment Score (show if re-analysed) -->
+            <section class="alignment-section" id="alignmentSection" style="display: none;">
+                <h3>Alignment Check 🎯</h3>
+                <div class="alignment-score" id="alignmentScore">—</div>
+                <p id="alignmentInsight" style="color: var(--text-primary);"></p>
+            </section>
+
+            <!-- Platforms Found -->
+            <section class="platforms-section">
+                <h2>Platforms you're on 🌐</h2>
+                <div id="platformsList" class="platforms-grid"></div>
+            </section>
+
+            <!-- Platform Details (Checklist Format) -->
+            <section class="platform-details">
+                <h2>Platform breakdown 📊</h2>
+                <div id="platformDetailsContainer"></div>
+            </section>
+
+            <!-- Missing Platforms -->
+            <section class="missing-platforms" id="missingPlatformsSection" style="display: none;">
+                <h2>What's missing 👻</h2>
+                <p class="section-intro">These platforms could help your business, but we couldn't find accounts for them:</p>
+                <div id="missingPlatformsList" class="missing-list"></div>
+            </section>
+
+            <!-- Email Report -->
+            <section class="email-report">
+                <h3>📧 Want this in your inbox?</h3>
+                <p style="margin-bottom: var(--space-md); color: var(--text-secondary);">We'll email you a PDF version. No spam, promise.</p>
+                <form class="email-form" onsubmit="handleEmailReport(event)">
+                    <input type="email" id="emailInput" placeholder="your@email.com" required>
+                    <button type="submit" class="btn-primary">Send Report</button>
+                </form>
+            </section>
+
+            <!-- Upgrade CTAs -->
+            <section class="upgrade-section">
+                <div class="cta-card">
+                    <h3>Want the full picture? 🎯</h3>
+                    <p>The free scan gives you the highlights. The full report goes deep — competitor benchmarks, content strategy gaps, platform-by-platform action plan. Everything you need to actually fix this.</p>
+                    <a href="mailto:hello@socialmediascan.io?subject=Full Report Request" class="btn-primary">Get Full Report — €29</a>
+                </div>
+
+                <div class="cta-card cta-secondary">
+                    <h3>Rather have someone just... do it for you? 💅</h3>
+                    <p>Fair. Our social media specialist can take this off your plate entirely. Real human, real strategy, real results. No robots pretending to be your brand.</p>
+                    <a href="https://calendly.com/ninahudson-90/30min?utm_source=onlineapp" target="_blank" class="btn-secondary">Work With Nina →</a>
+                </div>
+            </section>
+        </div>
 
         <!-- Footer -->
         <footer class="footer">
-            <p class="footer-note">Report generated with AI. Insights based on publicly available data.</p>
+            <p class="footer-note">Built with AI. Powered by coffee. Reviewed by a human who actually knows social media. ☕</p>
         </footer>
     </div>
 
     <script src="/playground/app.js"></script>
     <script>
-        // Load report data on page load
+        const quips = [
+            "This usually takes 15-30 seconds. Less time than your last Instagram scroll. 📱",
+            "Fun fact: the average business has 4.6 social accounts. How many do you have? 🤔",
+            "We're being thorough, not slow. There's a difference. 😤",
+            "Our AI is basically a very judgmental social media manager. But nice about it. 🤖",
+            "Almost there... probably. We're not great at estimating time, honestly. ⏰",
+            "Still working! The AI is writing your report, not browsing memes. We think. 🤞"
+        ];
+
+        let quipIndex = 0;
+        let quipInterval;
+        let currentReportData = null;
+
         document.addEventListener('DOMContentLoaded', () => {
-            loadReport();
-        });
-
-        function loadReport() {
-            // Get report data from URL params or localStorage
-            const urlParams = new URLSearchParams(window.location.search);
-            const reportId = urlParams.get('id');
-
-            // For MVP, we'll use localStorage
+            // Check if we already have data
             const reportData = localStorage.getItem('socialScanReport');
 
-            if (!reportData) {
-                // No data, redirect to home
-                window.location.href = '/playground/';
-                return;
+            if (reportData) {
+                try {
+                    const data = JSON.parse(reportData);
+                    if (data.overallScore !== undefined && data.platforms && data.platforms.length > 0) {
+                        showReport(data);
+                        return;
+                    }
+                } catch(e) {}
             }
 
-            try {
-                const data = JSON.parse(reportData);
-                renderReport(data);
-            } catch (error) {
-                console.error('Error loading report:', error);
-                window.location.href = '/playground/';
+            // Check if we have pending scan data
+            const pendingScan = localStorage.getItem('pendingScanUrl');
+            if (pendingScan) {
+                runFullScan(pendingScan);
+            } else {
+                // No data at all — redirect
+                showError("No scan data found. Let's start fresh!");
+            }
+        });
+
+        function updateStep(stepNum, status) {
+            const step = document.getElementById('step' + stepNum);
+            if (!step) return;
+
+            step.classList.remove('active', 'done');
+            const icon = step.querySelector('.step-icon');
+
+            if (status === 'active') {
+                step.classList.add('active');
+                icon.textContent = '⏳';
+            } else if (status === 'done') {
+                step.classList.add('done');
+                icon.textContent = '✅';
             }
         }
 
-        function renderReport(data) {
-            // Set business info
+        function rotateQuips() {
+            quipIndex = (quipIndex + 1) % quips.length;
+            const el = document.getElementById('loadingQuip');
+            if (el) el.textContent = quips[quipIndex];
+        }
+
+        async function runFullScan(url, userGoal = null, userAudience = null) {
+            quipInterval = setInterval(rotateQuips, 4000);
+
+            try {
+                // Step 1: Discover
+                updateStep(1, 'active');
+                const discoverRes = await fetch('/api/scan/discover', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                if (!discoverRes.ok) {
+                    const err = await discoverRes.json();
+                    throw new Error(err.error || 'Failed to scan website');
+                }
+
+                const discoverData = await discoverRes.json();
+                updateStep(1, 'done');
+
+                if (!discoverData.platforms || discoverData.platforms.length === 0) {
+                    throw new Error("We couldn't find any social accounts linked to that site. Either they're hiding really well, or they don't exist yet. 🤷");
+                }
+
+                // Step 2: Checking platforms
+                updateStep(2, 'active');
+                await new Promise(r => setTimeout(r, 800));
+                updateStep(2, 'done');
+
+                // Step 3: AI Analysis
+                updateStep(3, 'active');
+                const analyzeRes = await fetch('/api/scan/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url,
+                        platforms: discoverData.platforms,
+                        businessName: discoverData.businessName,
+                        websiteData: discoverData.websiteData,
+                        userGoal,
+                        userAudience
+                    })
+                });
+
+                if (!analyzeRes.ok) {
+                    const err = await analyzeRes.json();
+                    throw new Error(err.error || 'AI analysis failed');
+                }
+
+                const analyzeData = await analyzeRes.json();
+                updateStep(3, 'done');
+
+                // Step 4: Building report
+                updateStep(4, 'active');
+                await new Promise(r => setTimeout(r, 500));
+                updateStep(4, 'done');
+
+                // Save and show
+                localStorage.setItem('socialScanReport', JSON.stringify(analyzeData));
+                localStorage.removeItem('pendingScanUrl');
+
+                await new Promise(r => setTimeout(r, 300));
+                showReport(analyzeData);
+
+            } catch (error) {
+                console.error('Scan error:', error);
+                showError(error.message);
+            } finally {
+                clearInterval(quipInterval);
+            }
+        }
+
+        function showReport(data) {
+            currentReportData = data;
+
+            document.getElementById('reportLoading').style.display = 'none';
+            document.getElementById('reportError').style.display = 'none';
+            document.getElementById('reportContent').style.display = 'block';
+
             document.getElementById('businessName').textContent = `Report for ${data.businessName || data.url}`;
             document.getElementById('businessUrl').textContent = data.url;
 
-            // Set overall score
-            document.getElementById('overallScore').textContent = data.overallScore || '--';
+            const scoreEl = document.getElementById('overallScore');
+            scoreEl.textContent = data.overallScore || '--';
             document.getElementById('overallInsight').textContent = data.overallInsight || '';
 
-            // Add score color class
-            const scoreElement = document.getElementById('overallScore');
             const score = parseInt(data.overallScore);
-            if (score >= 70) scoreElement.classList.add('score-good');
-            else if (score >= 40) scoreElement.classList.add('score-medium');
-            else scoreElement.classList.add('score-poor');
+            if (score >= 70) scoreEl.classList.add('score-good');
+            else if (score >= 40) scoreEl.classList.add('score-medium');
+            else scoreEl.classList.add('score-poor');
 
-            // Render platforms found
+            // What we detected
+            document.getElementById('detectedPositioning').textContent = data.detectedPositioning || 'Unknown';
+            document.getElementById('detectedTone').textContent = data.detectedTone || 'Unknown';
+            document.getElementById('visualConsistency').textContent = data.visualConsistency || 'Unknown';
+
+            // Alignment (if re-analysed)
+            if (data.alignmentScore !== undefined) {
+                document.getElementById('alignmentSection').style.display = 'block';
+                document.getElementById('alignmentScore').textContent = data.alignmentScore + '/100';
+                document.getElementById('alignmentInsight').textContent = data.alignmentInsight || '';
+            }
+
+            // Platforms chips
             const platformsList = document.getElementById('platformsList');
             platformsList.innerHTML = '';
-
             if (data.platforms && data.platforms.length > 0) {
-                data.platforms.forEach(platform => {
-                    const platformCard = document.createElement('div');
-                    platformCard.className = 'platform-chip';
-                    platformCard.innerHTML = `
-                        <span class="platform-icon">${getPlatformEmoji(platform.name)}</span>
-                        <span class="platform-name">${platform.name}</span>
-                        <span class="platform-status ${getStatusClass(platform.score)}">${platform.score}</span>
+                data.platforms.forEach(p => {
+                    const chip = document.createElement('div');
+                    chip.className = 'platform-chip';
+                    chip.innerHTML = `
+                        <span class="platform-icon">${getPlatformEmoji(p.name)}</span>
+                        <span class="platform-name">${p.name}</span>
+                        <span class="platform-status ${getStatusClass(p.score)}">${p.score}</span>
                     `;
-                    platformsList.appendChild(platformCard);
-                });
-            } else {
-                platformsList.innerHTML = '<p class="no-platforms">No social accounts found. That's... a problem.</p>';
-            }
-
-            // Render platform details
-            const detailsContainer = document.getElementById('platformDetailsContainer');
-            detailsContainer.innerHTML = '';
-
-            if (data.platforms && data.platforms.length > 0) {
-                data.platforms.forEach(platform => {
-                    const detailCard = createPlatformDetailCard(platform);
-                    detailsContainer.appendChild(detailCard);
+                    platformsList.appendChild(chip);
                 });
             }
 
-            // Render missing platforms
+            // Platform detail cards (checklist format)
+            const container = document.getElementById('platformDetailsContainer');
+            container.innerHTML = '';
+            if (data.platforms) {
+                data.platforms.forEach(p => container.appendChild(createDetailCard(p)));
+            }
+
+            // Missing platforms
             if (data.missingPlatforms && data.missingPlatforms.length > 0) {
                 document.getElementById('missingPlatformsSection').style.display = 'block';
-                const missingList = document.getElementById('missingPlatformsList');
-                missingList.innerHTML = data.missingPlatforms.map(p =>
-                    `<span class="missing-platform">${getPlatformEmoji(p)} ${p}</span>`
-                ).join('');
+                document.getElementById('missingPlatformsList').innerHTML =
+                    data.missingPlatforms.map(p => `<span class="missing-platform">${getPlatformEmoji(p)} ${p}</span>`).join('');
             }
         }
 
-        function createPlatformDetailCard(platform) {
+        function showError(message) {
+            clearInterval(quipInterval);
+            document.getElementById('reportLoading').style.display = 'none';
+            document.getElementById('reportError').style.display = 'block';
+            document.getElementById('reportErrorMsg').textContent = message;
+        }
+
+        function createDetailCard(platform) {
             const card = document.createElement('div');
             card.className = 'platform-detail-card';
+            const emoji = platform.score >= 70 ? '🟢' : platform.score >= 40 ? '🟡' : '🔴';
 
-            const statusClass = getStatusClass(platform.score);
-            const statusEmoji = platform.score >= 70 ? '🟢' : platform.score >= 40 ? '🟡' : '🔴';
+            let checklistHTML = '';
+            if (platform.checkmarks) {
+                checklistHTML = '<div class="checklist">';
+
+                if (platform.checkmarks.good && platform.checkmarks.good.length > 0) {
+                    checklistHTML += `
+                        <div class="checklist-section">
+                            <h4>What's working ✅</h4>
+                            <ul class="checklist-items checklist-good">
+                                ${platform.checkmarks.good.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                        </div>`;
+                }
+
+                if (platform.checkmarks.bad && platform.checkmarks.bad.length > 0) {
+                    checklistHTML += `
+                        <div class="checklist-section">
+                            <h4>What needs work ❌</h4>
+                            <ul class="checklist-items checklist-bad">
+                                ${platform.checkmarks.bad.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                        </div>`;
+                }
+
+                if (platform.checkmarks.reflect && platform.checkmarks.reflect.length > 0) {
+                    checklistHTML += `
+                        <div class="checklist-section">
+                            <h4>Worth reflecting on ℹ️</h4>
+                            <ul class="checklist-items checklist-reflect">
+                                ${platform.checkmarks.reflect.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                        </div>`;
+                }
+
+                checklistHTML += '</div>';
+            }
 
             card.innerHTML = `
                 <div class="platform-detail-header">
@@ -176,86 +670,84 @@
                         <span class="platform-icon-large">${getPlatformEmoji(platform.name)}</span>
                         <h3>${platform.name}</h3>
                     </div>
-                    <div class="platform-score ${statusClass}">
-                        <span class="status-emoji">${statusEmoji}</span>
+                    <div class="platform-score ${getStatusClass(platform.score)}">
+                        <span class="status-emoji">${emoji}</span>
                         <span class="score-value">${platform.score}/100</span>
                     </div>
                 </div>
-
                 ${platform.handle ? `<p class="platform-handle">@${platform.handle}</p>` : ''}
-
                 ${platform.metrics ? `
                     <div class="platform-metrics">
-                        ${Object.entries(platform.metrics).map(([key, value]) =>
-                            `<div class="metric">
-                                <span class="metric-label">${formatMetricLabel(key)}</span>
-                                <span class="metric-value">${value}</span>
-                            </div>`
+                        ${Object.entries(platform.metrics).map(([k, v]) =>
+                            `<div class="metric"><span class="metric-label">${formatLabel(k)}</span><span class="metric-value">${v}</span></div>`
                         ).join('')}
-                    </div>
-                ` : ''}
-
-                <div class="platform-analysis">
-                    ${platform.strengths && platform.strengths.length > 0 ? `
-                        <div class="analysis-section">
-                            <h4>What's working ✅</h4>
-                            <ul>
-                                ${platform.strengths.map(s => `<li>${s}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
-
-                    ${platform.weaknesses && platform.weaknesses.length > 0 ? `
-                        <div class="analysis-section">
-                            <h4>What's not ❌</h4>
-                            <ul>
-                                ${platform.weaknesses.map(w => `<li>${w}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
-
-                    ${platform.quickWin ? `
-                        <div class="quick-win">
-                            <h4>Quick win 🚀</h4>
-                            <p>${platform.quickWin}</p>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
+                    </div>` : ''}
+                ${checklistHTML}
+                ${platform.quickWin ? `<div class="quick-win"><h4>Quick win 🚀</h4><p>${platform.quickWin}</p></div>` : ''}`;
 
             return card;
         }
 
-        function getPlatformEmoji(platformName) {
-            const emojis = {
-                'Instagram': '📸',
-                'Facebook': '👥',
-                'LinkedIn': '💼',
-                'Twitter': '🐦',
-                'X': '🐦',
-                'TikTok': '🎵',
-                'YouTube': '📺',
-                'Pinterest': '📌',
-                'Google Business': '🗺️'
-            };
-            return emojis[platformName] || '🌐';
+        function handleSelfAssessment(answer) {
+            // Update UI
+            document.querySelectorAll('.self-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+
+            // Show user inputs if answer is not "yes"
+            if (answer !== 'yes') {
+                document.getElementById('userInputsSection').style.display = 'block';
+                document.getElementById('userInputsSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                document.getElementById('userInputsSection').style.display = 'none';
+            }
+        }
+
+        async function handleReAnalyze() {
+            const goal = document.getElementById('goalInput').value.trim();
+            const audience = document.getElementById('audienceInput').value.trim();
+
+            if (!goal && !audience) {
+                alert('Please fill in at least one field to re-analyse.');
+                return;
+            }
+
+            if (!currentReportData) {
+                alert('No report data found. Please scan again.');
+                return;
+            }
+
+            // Show loading, hide content
+            document.getElementById('reportContent').style.display = 'none';
+            document.getElementById('reportLoading').style.display = 'block';
+
+            // Re-run scan with user context
+            await runFullScan(currentReportData.url, goal, audience);
+        }
+
+        function handleEmailReport(event) {
+            event.preventDefault();
+            const email = document.getElementById('emailInput').value;
+
+            // For now: use mailto hack
+            const subject = encodeURIComponent('My Social Media Scan Report');
+            const body = encodeURIComponent(`Hi!\n\nPlease send me a PDF version of my social media scan report for ${currentReportData?.businessName || 'my business'}.\n\nReport URL: ${window.location.href}\n\nThanks!`);
+
+            window.location.href = `mailto:hello@socialmediascan.io?subject=${subject}&body=${body}`;
+
+            // Show confirmation
+            alert(`We've opened your email client. Send the email and we'll reply with your PDF report within 24 hours! 📧`);
+        }
+
+        function getPlatformEmoji(name) {
+            return {'Instagram':'📸','Facebook':'👥','LinkedIn':'💼','Twitter':'🐦','X':'🐦','TikTok':'🎵','YouTube':'📺','Pinterest':'📌','Google Business':'🗺️'}[name] || '🌐';
         }
 
         function getStatusClass(score) {
-            if (score >= 70) return 'status-good';
-            if (score >= 40) return 'status-medium';
-            return 'status-poor';
+            return score >= 70 ? 'status-good' : score >= 40 ? 'status-medium' : 'status-poor';
         }
 
-        function formatMetricLabel(key) {
-            const labels = {
-                'followers': 'Followers',
-                'posts': 'Posts',
-                'engagement': 'Engagement',
-                'lastPost': 'Last Post',
-                'frequency': 'Posting Frequency'
-            };
-            return labels[key] || key;
+        function formatLabel(key) {
+            return {'followers':'Followers','posts':'Posts','engagement':'Engagement','lastPost':'Last Post','frequency':'Posting Freq'}[key] || key;
         }
     </script>
 </body>
